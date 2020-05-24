@@ -154,6 +154,6 @@ class SeeThru_Feed():
         f = open(path, "w")
         f.close()
 
-
-if __name__=="__main__":
+def exec():
+    print(sys.argv)
     SeeThru_Feed(sys.argv)
