@@ -1,6 +1,8 @@
 
+[[Scripts]]
     [Scripts.{{ Script_Name }}]
-        Script_Object_Path="{{ Script_Object_Path }}"
-        Script_Output_Path="{{ Script_Output_Path }}"
+        [Scripts.{{ Script_Name }}.Meta]
+            Script_Object_Path="{{ Script_Object_Path }}"
+            Script_Output_Path="{{ Script_Output_Path }}"
         [Scripts.{{ Script_Name }}.Fillables]
 

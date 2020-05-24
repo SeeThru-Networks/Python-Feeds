@@ -12,6 +12,7 @@ class SeeThru_Feed():
         Arguments:
             args {[string]} -- The cli args
         """
+        self.argv = argv
         if len(argv) == 1: return
         if argv[1] == "createfeedscheme":
             if len(argv) < 3: return
@@ -54,6 +55,8 @@ class SeeThru_Feed():
         newScript.close()
         scriptFile.close()
 
+        if "--no-config" in self.argv: return
+
         # Creates a template config file
         # Opens the template file
         templateConfig = open(os.path.join(os.path.dirname(__file__), 'templates/configHeader_Template.toml'), 'r')
@@ -93,6 +96,7 @@ class SeeThru_Feed():
         newScript.close()
         scriptFile.close()
 
+        if "--no-config" in self.argv: return
 
         scriptConfigTemplate = open(os.path.join(os.path.dirname(__file__), 'templates/configScript_Template.toml'), 'r')
         configScript = scriptConfigTemplate.read()
@@ -113,6 +117,9 @@ class SeeThru_Feed():
         Runs the feed scheme
         """
         # Opens the config file and parses it
+        if not os.path.exists(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml')):
+            print("[Error] There is no conig file")
+            return
         schemeConfig = open(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml'), 'r')
         scheme = toml.loads(schemeConfig.read())
         schemeConfig.close()
@@ -120,16 +127,18 @@ class SeeThru_Feed():
         for script in scheme['Scripts']:
             Script_Name = list(script)[0]
             # Imports the script
-            module = importlib.import_module(script[Script_Name]['Script_Object_Path'])
+            module = importlib.import_module(script[Script_Name]['Meta']['Script_Object_Path'])
             class_ = getattr(module, Script_Name)
             # Instantiates the script
             scriptInstance = class_()
             # Sets any fillables defined
-            for fillable in script[Script_Name]["Fillables"]:
-                scriptInstance.SetProperty(fillable, script[Script_Name]["Fillables"][fillable])
+            if 'Fillables' in script[Script_Name]:
+                for fillable in script[Script_Name]["Fillables"]:
+                    scriptInstance.SetProperty(fillable, script[Script_Name]["Fillables"][fillable])
+            scriptInstance.SetInternalAlias(Script_Name)
             # Runs the script
             scriptInstance.RunScript()\
-                .SetOutputPath(script[Script_Name]['Script_Output_Path'])\
+                .SetOutputPath(script[Script_Name]['Meta']['Script_Output_Path'])\
                 .EvaluateScript()\
                 .LogOutput()
 
@@ -155,5 +164,4 @@ class SeeThru_Feed():
         f.close()
 
 def exec():
-    print(sys.argv)
     SeeThru_Feed(sys.argv)

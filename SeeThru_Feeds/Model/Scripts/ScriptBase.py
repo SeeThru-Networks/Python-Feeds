@@ -106,9 +106,16 @@ class ScriptBase(PropertyManager):
         else: raise Exception("Directory for output file '{}' does not exist".format(self.ScriptOutputPath))
         return self
     def LogOutput(self):
+        """
+        Logs the result of the script
+
+        Returns:
+            ScriptBase -- The script
+        """
+        if (self.GetInternalAlias() != None): print("--{}".format(self.GetInternalAlias()))
         print("Status: {}\nMessage: {}".format(self.ScriptResult.status, self.ScriptResult.message))
         return self
-
+    
     # The Script_Title attribute should be set in your script
     Script_Title = None
     @classmethod
@@ -214,3 +221,24 @@ class ScriptBase(PropertyManager):
         """
         if cls.Script_LicenseLink == None: raise NotImplementedError("There is no LicenseLink defined, please define it as 'Script_LicenseLink='")
         return cls.Script_LicenseLink
+    
+    def GetInternalAlias(self):
+        """
+        Returns an internal alias of the script, if it is set, it will can be used internally
+
+        Returns:
+            string -- The script's internal alias
+        """
+        try:
+            return self.Script_Alias
+        except: 
+            self.Script_Alias = None
+            return self.Script_Alias
+    def SetInternalAlias(self, alias):
+        """
+        Sets a new internal alias for the script
+
+        Arguments:
+            alias {String} -- The new internal alias
+        """
+        self.Script_Alias = alias
