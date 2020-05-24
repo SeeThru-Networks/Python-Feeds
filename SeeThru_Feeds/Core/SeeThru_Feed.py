@@ -102,8 +102,8 @@ class SeeThru_Feed():
         configScript = scriptConfigTemplate.read()
         # Sets the default information
         configScript = configScript.replace(r"{{ Script_Name }}", scriptName)
-        configScript = configScript.replace(r"{{ Script_Object_Path }}", "Scripts.{}".format(scriptName))
-        configScript = configScript.replace(r"{{ Script_Output_Path }}", scriptName)
+        configScript = configScript.replace(r"{{ Script_Object_Path }}", "Scripts.{}@{}".format(scriptName, scriptName))
+        configScript = configScript.replace(r"{{ Script_Output_Path }}", "Outputs/{}.json".format(scriptName))
 
         # Opens the config file for the feed scheme
         schemeConfig = open(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml'), 'a')
@@ -116,6 +116,31 @@ class SeeThru_Feed():
         """
         Runs the feed scheme
         """
+        # Parses a .env file if one exists
+        if os.path.exists(os.path.join(SeeThru_Feed.Base_Dir, '.env')):
+            # Opens the file and parses it
+            envFile = open(os.path.join(SeeThru_Feed.Base_Dir, '.env'), "r")
+            iter = 0
+            while True: 
+                iter += 1
+                line = envFile.readline() 
+                if not line: break
+                line = line.split("#")[0]
+                # Finds key value pairs
+                if "=" in line:
+                    key, value = line.split("=")
+
+                    key = key.strip("\n")
+                    key = key.strip(" ")
+                    if key.startswith('"'): key = key.strip('"')
+                    elif key.startswith("'"): key = key.strip("'")
+
+                    value = value.strip("\n")
+                    value = value.strip(" ")
+                    if value.startswith('"'): value = value.strip('"')
+                    elif value.startswith("'"): value = value.strip("'")
+                    os.environ[key] = value
+            pass
         # Opens the config file and parses it
         if not os.path.exists(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml')):
             print("[Error] There is no conig file")
@@ -126,21 +151,48 @@ class SeeThru_Feed():
 
         for script in scheme['Scripts']:
             Script_Name = list(script)[0]
+            # Splits the object's module and the object's name from the Script_Object_Path
+            objectModule = None
+            objectName = None
+            objectComponents = script[Script_Name]['Meta']['Script_Object_Path'].split('@')
+            objectModule = objectComponents[0]
+            objectName = objectComponents[1] if len(objectComponents) > 1 else None
+
             # Imports the script
-            module = importlib.import_module(script[Script_Name]['Meta']['Script_Object_Path'])
-            class_ = getattr(module, Script_Name)
+            module = importlib.import_module(objectModule)
+            class_ = getattr(module, objectName)
             # Instantiates the script
             scriptInstance = class_()
+
             # Sets any fillables defined
             if 'Fillables' in script[Script_Name]:
                 for fillable in script[Script_Name]["Fillables"]:
-                    scriptInstance.SetProperty(fillable, script[Script_Name]["Fillables"][fillable])
+                    # Gets the value assigned to the fillable
+                    value = script[Script_Name]["Fillables"][fillable]
+                    # Checks if the value is a deferred value, i.e. the value is somewhere else
+                    try:
+                        value = dict(value)
+                        if "type" not in value or "name" not in value:
+                            print("[Error] Incorrectly configured value: {}".format(value))
+                            return
+                        # Checks for which type of deferred value it is
+                        if value["type"] == "env":
+                            # Looks for the value in the env file
+                            if value["name"] not in os.environ:
+                                print("[Error] Name {} not in env".format(value["name"]))
+                                return
+                            value = os.environ[value["name"]]
+                    except: pass
+                    finally:
+                        scriptInstance.SetProperty(fillable, value)
+
             scriptInstance.SetInternalAlias(Script_Name)
             # Runs the script
             scriptInstance.RunScript()\
                 .SetOutputPath(script[Script_Name]['Meta']['Script_Output_Path'])\
                 .EvaluateScript()\
-                .LogOutput()
+                .LogOutput()\
+                .ExportToOutput()
 
     # ------Utility Methods------
     def CreateDir(self, path):
