@@ -1,0 +1,2 @@
+include requirements.txt
+recursive-include SeeThru_Feeds/Core/templates/ *
