@@ -38,19 +38,19 @@ The directory layout is a follows:
 
 ::
 
-    .
-    ├── Components
-    │   ├── [Your_Components.py]
-    │   ├── Vendor/
-    │   │   ├── [Vendor_Components.py]
-    ├── Scripts          
-    │   ├── [Your_Scripts.py]
-    │   ├── Vendor/
-    │   │   ├── [Vendor_Scripts.py]
-    ├── Outputs
-    │   ├── [Test_Outputs.json]
-    ├── config.toml
-    └── manage.py
+	.
+	├── Components
+	│   ├── [Your_Components.py]
+	│   ├── Vendor/
+	│   │   ├── [Vendor_Components.py]
+	├── Scripts          
+	│   ├── [Your_Scripts.py]
+	│   ├── Vendor/
+	│   │   ├── [Vendor_Scripts.py]
+	├── Outputs
+	│   ├── [Test_Outputs.json]
+	├── config.toml
+	└── manage.py
 
 The vendor directories are locations for you to store components and/or scripts that weren't created by you and haven't been installed from PyPI, it provides seperation.
 
@@ -63,11 +63,11 @@ By default the ``config.toml`` is laid out as such:
 
 :: 
 
-    Scheme_Name = "Scheme_Name"
-    Scheme_Description = "Enter a description for your feed scheme"
-    Scheme_Author = "Enter the author of your feed scheme"
-    Scheme_Owner = "Enter the owner for your feed scheme"
-    Creation_Date = "The current date"
+	Scheme_Name = "Scheme_Name"
+	Scheme_Description = "Enter a description for your feed scheme"
+	Scheme_Author = "Enter the author of your feed scheme"
+	Scheme_Owner = "Enter the owner for your feed scheme"
+	Creation_Date = "The current date"
 
 ``Scheme_Name`` will have the scheme name that you defined when you created the feed scheme. The other values you can fill out to give metadata to the scheme's config file.
 
@@ -81,14 +81,14 @@ To make the script execute when the feedscheme is ran, you will want to add this
 
 ::
 
-    [[Scripts]]
-        [Scripts.Script_Name]
-            [Scripts.Script_Name.Meta]
-                Script_Object_Path="Scripts.Script_File@Script_Object_Name"
-                Script_Output_Path="Outputs/Script_Name.json"
-            [Scripts.Script_Name.Fillables]
-                fillable_0 = "Value_0"
-                fillable_1 = {type="env", name="ENV_Variable_Name"}
+	[[Scripts]]
+		[Scripts.Script_Name]
+			[Scripts.Script_Name.Meta]
+				Script_Object_Path="Scripts.Script_File@Script_Object_Name"
+				Script_Output_Path="Outputs/Script_Name.json"
+			[Scripts.Script_Name.Fillables]
+				fillable_0 = "Value_0"
+				fillable_1 = {type="env", name="ENV_Variable_Name"}
 
 The ``Script_Name`` can be anything you want, however this will be used internally to reference the script. 
 This means that you could have multiple of the same script in the config file with different names but pass different fillables, to make the single script perform a slightly different test.
@@ -97,9 +97,9 @@ For example, you could create a generic script which tests if a socket is open a
 The ``Meta`` section defines the meta information about the feed, this includes:
 
 * Script_Object_Path: 
-    This is the import path of the script object, i.e. the python line ``from Scripts.Script_File import Script_Object_Name`` translates to ``Scripts.Script_File@Script_Object_Name``. 
+	This is the import path of the script object, i.e. the python line ``from Scripts.Script_File import Script_Object_Name`` translates to ``Scripts.Script_File@Script_Object_Name``. 
 
-    The Script_Object_Name is the script that will actually get executed and must inherit from ``SeeThru_Feeds.Model.Scripts.Script_Base``.
+	The Script_Object_Name is the script that will actually get executed and must inherit from ``SeeThru_Feeds.Model.Scripts.Script_Base``.
 * Script_Output_Path: This is the location that the output of the script will be stored, in general this should be under ``outputs/`` and should have a file extension of ``.json``.
 
 The ``Fillables`` section defines the values for the properties that the script will take, the value must follow the restrictions of the fillable property in the script.
@@ -113,20 +113,20 @@ The template script file looks as follows:
 
 :: 
 
-    from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
-    from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
-    from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
+	from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
+	from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
+	from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
 
-    class Script_Name(ScriptBase):
-            EXAMPLE_PROPERTY = FillableProperty(name="example_property", required=False)
+	class Script_Name(ScriptBase):
+			EXAMPLE_PROPERTY = FillableProperty(name="example_property", required=False)
 
-            Script_Title="Script_Name"
+			Script_Title="Script_Name"
 
-            # ------ Script Overrides ------
-            def Script_Run(self): pass
-            def Script_Evaluate(self, result):
-                result.SetStatus("green")
-                result.SetMessage("")
+			# ------ Script Overrides ------
+			def Script_Run(self): pass
+			def Script_Evaluate(self, result):
+				result.SetStatus("green")
+				result.SetMessage("")
 
 The Script_Name occurences will be replaced with the name that you gave.
 
@@ -140,6 +140,12 @@ An example of a ResultProperty would be a ``latency`` property, which stores the
 
 ``Script_Evaluate`` is where your script's test results should get evaluated into red, amber or green and a message produced. The method takes a result paramater which will be of type ScriptResult. This object stores the colour and message of the script.
 These can be set by using ``result.SetMessage()`` and ``Result.SetStatus()``.
+
+To run your feed scheme, in the base directory you need to run:
+
+::
+
+	python manage.py runfeedscheme (or python3 manage.py runfeedscheme)
 
 Definitions
 ===========
