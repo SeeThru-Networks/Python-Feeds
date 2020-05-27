@@ -46,7 +46,7 @@ class SeeThru_Feed():
         self.CreateDir(os.path.join(schemeName, 'Outputs'))
 
         # Creates the new script
-        scriptFile = open(os.path.join(os.path.dirname(__file__), 'templates/Manage_Template.py'), 'r')
+        scriptFile = open(os.path.join(os.path.dirname(__file__), 'templates/Manage_Template.template'), 'r')
         scriptTemplate = scriptFile.read()
         # Opens the new script file
         newScript = open(os.path.join(schemeName, 'manage.py'), "w")
@@ -85,7 +85,7 @@ class SeeThru_Feed():
             scriptName {[type]} -- [description]
         """
         # Creates the new script
-        scriptFile = open(os.path.join(os.path.dirname(__file__), 'templates/Script_Template.py'), 'r')
+        scriptFile = open(os.path.join(os.path.dirname(__file__), 'templates/Script_Template.template'), 'r')
         scriptTemplate = scriptFile.read()
         # Sets the default information
         scriptTemplate = scriptTemplate.replace(r"{{ Script_Name }}", scriptName)
