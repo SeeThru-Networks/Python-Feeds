@@ -19,7 +19,7 @@ To install the latest development version, run:
 ::
 
   git clone https://github.com/SeeThru-Networks/Python-Feeds.git
-  cd python-feeds
+  cd Python-Feeds
   python setup.py install (or python3 setup.py install)
 
 This will install the SeeThru Feeds module. You can also install the module in a ``virtualenv`` if you would like to do so.
@@ -71,77 +71,84 @@ By default the ``config.toml`` is laid out as such:
 
 ``Scheme_Name`` will have the scheme name that you defined when you created the feed scheme. The other values you can fill out to give metadata to the scheme's config file.
 
-The ``config.toml`` file will be filled out as you execute more functions from ``manage.py`` but this is the default config file contents
+The ``config.toml`` file will get filled out as you execute more functions from ``manage.py`` but this is the default config file contents.
+
+The feed scheme in its current state is fairly useless as it doesn't contain any scripts to execute.
+
+If you were to add a script that you found online and trust, you should add it to ``scripts/vendor/``.
+However this script wouldn't be executed automatically when the feedscheme is ran as the script doesn't exist in ``config.toml``.
+To make the script execute when the feedscheme is ran, you will want to add this block to the end on your config file:
+
+::
+
+    [[Scripts]]
+        [Scripts.Script_Name]
+            [Scripts.Script_Name.Meta]
+                Script_Object_Path="Scripts.Script_File@Script_Object_Name"
+                Script_Output_Path="Outputs/Script_Name.json"
+            [Scripts.Script_Name.Fillables]
+                fillable_0 = "Value_0"
+                fillable_1 = {type="env", name="ENV_Variable_Name"}
+
+The ``Script_Name`` can be anything you want, however this will be used internally to reference the script. 
+This means that you could have multiple of the same script in the config file with different names but pass different fillables, to make the single script perform a slightly different test.
+For example, you could create a generic script which tests if a socket is open and it requires a host as a ``fillable``, then in the config file, this script can be referenced multiple times to create multiple test feeds.
+
+The ``Meta`` section defines the meta information about the feed, this includes:
+
+* Script_Object_Path: 
+    This is the import path of the script object, i.e. the python line ``from Scripts.Script_File import Script_Object_Name`` translates to ``Scripts.Script_File@Script_Object_Name``. 
+
+    The Script_Object_Name is the script that will actually get executed and must inherit from ``SeeThru_Feeds.Model.Scripts.Script_Base``.
+* Script_Output_Path: This is the location that the output of the script will be stored, in general this should be under ``outputs/`` and should have a file extension of ``.json``.
+
+The ``Fillables`` section defines the values for the properties that the script will take, the value must follow the restrictions of the fillable property in the script.
+e.g. If I had a fillable called ``host`` then in the ``Fillables`` section I would define: ``host= "seethrunetworks.co.uk"``. 
+By default the variable that I assign the value to will be the name of the fillable property in the script however this can be changed by the script's author.
+
+A lot of people will want to create a script themselves, this can be done via ``manage.py`` using ``createscript Script_Name``.
+This will create a template script in the ``Scripts/`` directory and will create an entry in the ``config.toml`` file with accurate parameters meaning that the entry alread points to the new script.
+
+The template script file looks as follows:
+
+:: 
+
+    from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
+    from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
+    from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
+
+    class Script_Name(ScriptBase):
+            EXAMPLE_PROPERTY = FillableProperty(name="example_property", required=False)
+
+            Script_Title="Script_Name"
+
+            # ------ Script Overrides ------
+            def Script_Run(self): pass
+            def Script_Evaluate(self, result):
+                result.SetStatus("green")
+                result.SetMessage("")
+
+The Script_Name occurences will be replaced with the name that you gave.
+
+``Script_Run`` is where your actual script should run it's tests, e.g. performing a ping and getting the latency.
+
+Any properties that are needed by the Script should be declared in the class using the ``FillableProperty`` and ``ResultProperty`` objects, these will be defined later but as a wuick summary, they can ensure that conditions enfored on the values needed before execution.
+An example of a FillableProperty would be the ``host`` used in a test, this would have the paremeters ``required=True`` and ``oftype=str`` to say that the property is required and must be of type string.
+
+Any propeties that are the result of your tests should be stored in ResultProperties, this is so that users of your script know what your script produces and to provice a common interface for accessing properties of a script.
+An example of a ResultProperty would be a ``latency`` property, which stores the latency of a ping test.
+
+``Script_Evaluate`` is where your script's test results should get evaluated into red, amber or green and a message produced. The method takes a result paramater which will be of type ScriptResult. This object stores the colour and message of the script.
+These can be set by using ``result.SetMessage()`` and ``Result.SetStatus()``.
 
 Definitions
 ===========
-* Component: 
-* Script: 
-* Feed: 
-* FeedScheme: 
+* Component: A smaller piece of a collection of tests
+* Script: A test which produces a colour and a message as an output
+* Fillables: Values that can be set to a script before the script is ran
+* Feed: An instance of a script which serves a specific purpose, it is the same as a SeeThru Feed
+* FeedScheme: A collection of feeds that can be executed together
 
-API Reference
-=============
-
-``toml.load(f, _dict=dict)``
-  Parse a file or a list of files as TOML and return a dictionary.
-
-  :Args:
-    * ``f``: A path to a file, list of filepaths (to be read into single
-      object) or a file descriptor
-    * ``_dict``: The class of the dictionary object to be returned
-
-  :Returns:
-    A dictionary (or object ``_dict``) containing parsed TOML data
-
-  :Raises:
-    * ``TypeError``: When ``f`` is an invalid type or is a list containing
-      invalid types
-    * ``TomlDecodeError``: When an error occurs while decoding the file(s)
-
-``toml.loads(s, _dict=dict)``
-  Parse a TOML-formatted string to a dictionary.
-
-  :Args:
-    * ``s``: The TOML-formatted string to be parsed
-    * ``_dict``: Specifies the class of the returned toml dictionary
-
-  :Returns:
-    A dictionary (or object ``_dict``) containing parsed TOML data
-
-  :Raises:
-    * ``TypeError``: When a non-string object is passed
-    * ``TomlDecodeError``: When an error occurs while decoding the
-      TOML-formatted string
-
-``toml.dump(o, f, encoder=None)``
-  Write a dictionary to a file containing TOML-formatted data
-
-  :Args:
-    * ``o``: An object to be converted into TOML
-    * ``f``: A File descriptor where the TOML-formatted output should be stored
-    * ``encoder``: An instance of ``TomlEncoder`` (or subclass) for encoding the object. If ``None``, will default to ``TomlEncoder``
-
-  :Returns:
-    A string containing the TOML-formatted data corresponding to object ``o``
-
-  :Raises:
-    * ``TypeError``: When anything other than file descriptor is passed
-
-``toml.dumps(o, encoder=None)``
-  Create a TOML-formatted string from an input object
-
-  :Args:
-    * ``o``: An object to be converted into TOML
-    * ``encoder``: An instance of ``TomlEncoder`` (or subclass) for encoding the object. If ``None``, will default to ``TomlEncoder``
-
-  :Returns:
-    A string containing the TOML-formatted data corresponding to object ``o``
-
-
-
-Licensing
-=========
-
-This project is released under the terms of the MIT Open Source License. View
-*LICENSE.txt* for more information.
+Notes
+=====
+* All paths including 'includes' are relative to the base directory of the feed scheme
