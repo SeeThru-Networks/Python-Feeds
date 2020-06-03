@@ -1,0 +1,5 @@
+Scheme_Name = "{{ Scheme_Name }}"
+Scheme_Description = "{{ Scheme_Description }}"
+Scheme_Author = "{{ Scheme_Author }}"
+Scheme_Owner = "{{ Scheme_Owner }}"
+Creation_Date = "{{ Creation_Date }}"
