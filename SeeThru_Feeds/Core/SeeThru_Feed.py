@@ -143,7 +143,7 @@ class SeeThru_Feed():
             pass
         # Opens the config file and parses it
         if not os.path.exists(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml')):
-            print("[Error] There is no conig file")
+            print("[Error] There is no config file")
             return
         schemeConfig = open(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml'), 'r')
         scheme = toml.loads(schemeConfig.read())
