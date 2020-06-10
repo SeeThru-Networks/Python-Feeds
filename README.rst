@@ -31,7 +31,9 @@ If you have docker on your system, use the included docker config (Dockerfile an
 
 `docker-compose up -d`
 
-That will download the necessary images and bring the container up. Once it is up,
+That will download the necessary images and bring the container up. Once it is up, the following command
+gives you a bash shell which uses that python. At a later time, we might add tests to run through this
+container in CI/CD created environments.
 
 `docker-compose exec python_feeds /bin/bash`
 

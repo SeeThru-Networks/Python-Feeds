@@ -1,6 +1,6 @@
 from SeeThru_Feeds.Model.Components.ComponentBase import ComponentBase
 from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
-import pysnmp.hlapi import *
+from pysnmp.hlapi import *
 
 class SNMPWalkToOID(ComponentBase):
     SNMP_HOST = FillableProperty(name="snmp_host", required=True, ofType=str)
