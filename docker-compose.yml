@@ -1,11 +1,7 @@
 version: '3'
 services:
-  simple_calc:
+  python_feeds:
     build: .
     stdin_open: true
     tty: true
-
-
-
-
 

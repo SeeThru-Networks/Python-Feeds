@@ -24,6 +24,20 @@ To install the latest development version, run:
 
 This will install the SeeThru Feeds module. You can also install the module in a ``virtualenv`` if you would like to do so.
 
+Alternative Installation (WIP)
+==============================
+
+If you have docker on your system, use the included docker config (Dockerfile and docker-compose.yml) like this:
+
+`docker-compose up -d`
+
+That will download the necessary images and bring the container up. Once it is up,
+
+`docker-compose exec python_feeds /bin/bash`
+
+Why use docker-compose? It gives us a friendly service name (python_feeds) and at a later time, when we set up a
+network of services to do automated testing, it will be useful.
+
 Getting Started
 ===============
 

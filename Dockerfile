@@ -9,5 +9,3 @@ COPY . .
 
 CMD ["python"]
 
-
-
