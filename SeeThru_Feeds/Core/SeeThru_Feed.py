@@ -5,13 +5,15 @@ from datetime import datetime
 class SeeThru_Feed():
     Base_Dir = os.getcwd()
 
-    def __init__(self, argv):
+    def __init__(self, argv, base_dir=os.getcwd()):
         """
         Provides the core functionaility
 
         Arguments:
-            args {[string]} -- The cli args
+            argv {[string]} -- The cli args
+            base_dir {string} -- The base directory to work from
         """
+        SeeThru_Feed.Base_Dir = base_dir
         self.argv = argv
         if len(argv) == 1: return
         if argv[1] == "createfeedscheme":
