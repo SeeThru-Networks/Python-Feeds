@@ -40,7 +40,7 @@ class ScriptResult:
         """
         Generates a timestamp for the result
         """
-        self.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     
     def GenerateJson(self):
         if self.status == None or self.message == None or self.timestamp == None: raise Exception("Not all values are provided for the result")
