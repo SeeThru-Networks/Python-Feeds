@@ -24,6 +24,22 @@ To install the latest development version, run:
 
 This will install the SeeThru Feeds module. You can also install the module in a ``virtualenv`` if you would like to do so.
 
+Alternative Installation (WIP)
+==============================
+
+If you have docker on your system, use the included docker config (Dockerfile and docker-compose.yml) like this:
+
+`docker-compose up -d`
+
+That will download the necessary images and bring the container up. Once it is up, the following command
+gives you a bash shell which uses that python. At a later time, we might add tests to run through this
+container in CI/CD created environments.
+
+`docker-compose exec python_feeds /bin/bash`
+
+Why use docker-compose? It gives us a friendly service name (python_feeds) and at a later time, when we set up a
+network of services to do automated testing, it will be useful.
+
 Getting Started
 ===============
 
@@ -135,7 +151,7 @@ The Script_Name occurences will be replaced with the name that you gave.
 Any properties that are needed by the Script should be declared in the class using the ``FillableProperty`` and ``ResultProperty`` objects, these will be defined later but as a wuick summary, they can ensure that conditions enfored on the values needed before execution.
 An example of a FillableProperty would be the ``host`` used in a test, this would have the paremeters ``required=True`` and ``oftype=str`` to say that the property is required and must be of type string.
 
-Any propeties that are the result of your tests should be stored in ResultProperties, this is so that users of your script know what your script produces and to provice a common interface for accessing properties of a script.
+Any properties that are the result of your tests should be stored in ResultProperties, this is so that users of your script know what your script produces and to provice a common interface for accessing properties of a script.
 An example of a ResultProperty would be a ``latency`` property, which stores the latency of a ping test.
 
 ``Script_Evaluate`` is where your script's test results should get evaluated into red, amber or green and a message produced. The method takes a result paramater which will be of type ScriptResult. This object stores the colour and message of the script.
