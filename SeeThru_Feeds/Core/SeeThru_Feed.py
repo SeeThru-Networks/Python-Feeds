@@ -190,7 +190,8 @@ class SeeThru_Feed():
 
             scriptInstance.SetInternalAlias(Script_Name)
             # Runs the script
-            scriptInstance.RunScript()\
+            scriptInstance.Prepare()\
+                .RunScript()\
                 .SetOutputPath(script[Script_Name]['Meta']['Script_Output_Path'])\
                 .EvaluateScript()\
                 .LogOutput()\
