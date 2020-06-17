@@ -2,9 +2,12 @@ from SeeThru_Feeds.Model.Components.ComponentBase import ComponentBase
 from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
 import socket
 
+
 class PortOpen(ComponentBase):
-    TARGET_HOST = FillableProperty(name="target_host", required=True, ofType=str)
-    PORT = FillableProperty(name="port", default=443, required=True, ofType=int)
+    TARGET_HOST = FillableProperty(
+        name="target_host", required=True, ofType=str)
+    PORT = FillableProperty(name="port", default=443,
+                            required=True, ofType=int)
     SUCCEEDED = ResultProperty(name="succeeded")
 
     Component_Title = "PortOpen Socket Component"
@@ -18,18 +21,22 @@ class PortOpen(ComponentBase):
 
         try:
             # Attempts a connection to the socket
-            sock.connect((self.GetProperty(PortOpen.TARGET_HOST), self.GetProperty(PortOpen.PORT)))
+            sock.connect((self.GetProperty(PortOpen.TARGET_HOST),
+                          self.GetProperty(PortOpen.PORT)))
             sock.close()
             self.SetProperty(PortOpen.SUCCEEDED, True)
         except:
             self.SetProperty(PortOpen.SUCCEEDED, False)
 
+
 class UDPPortOpen(ComponentBase):
-    TARGET_HOST = FillableProperty(name="target_host", required=True, ofType=str)
-    PORT = FillableProperty(name="port", default=443, required=True, ofType=int)
-    #Stores whether the udp data send was successful
+    TARGET_HOST = FillableProperty(
+        name="target_host", required=True, ofType=str)
+    PORT = FillableProperty(name="port", default=443,
+                            required=True, ofType=int)
+    # Stores whether the udp data send was successful
     SUCCEEDED = ResultProperty(name="succeeded")
-    #If not successful, then this stores the os level error number for the socket connection
+    # If not successful, then this stores the os level error number for the socket connection
     ERROR_NO = ResultProperty(name="error_no", default=0)
 
     Component_Title = "UDPPortOpen Socket Component"
@@ -44,7 +51,8 @@ class UDPPortOpen(ComponentBase):
         try:
             # Attempts a connection to the socket
             sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-            sock.sendto(b"Test", (self.GetProperty(self.TARGET_HOST), self.GetProperty(self.PORT)))
+            sock.sendto(b"Test", (self.GetProperty(
+                self.TARGET_HOST), self.GetProperty(self.PORT)))
             sock.close()
             self.SetProperty(self.SUCCEEDED, True)
         except socket.error as error:

@@ -1,5 +1,6 @@
 from SeeThru_Feeds.Model.Properties.Properties import *
 
+
 class PropertyManager:
     def Initialise(self):
         """
@@ -28,7 +29,7 @@ class PropertyManager:
                     # of the component, as the property is a static variable
                     prop.name = name
 
-    def SetProperty(self, prop, value): 
+    def SetProperty(self, prop, value):
         """
         Sets a value to the given property
         Note: The value isn't stored in the property instance
@@ -46,7 +47,9 @@ class PropertyManager:
         """
         self.Initialise()
         # Data validation
-        if not isinstance(prop, PropertyBase) and type(prop) != str: raise TypeError("Prop argument must be either of type Property or string")
+        if not isinstance(prop, PropertyBase) and type(prop) != str:
+            raise TypeError(
+                "Prop argument must be either of type Property or string")
         # Gets the indexable name of the property
         # it is either the value passed in as a string or the prop's internal name
         indexName = prop if type(prop) == str else prop.name
@@ -69,13 +72,15 @@ class PropertyManager:
         """
         self.Initialise()
         # Data validation
-        if not isinstance(prop, PropertyBase) and type(prop) != str: raise TypeError("Prop argument must be either of type Property or string")
+        if not isinstance(prop, PropertyBase) and type(prop) != str:
+            raise TypeError(
+                "Prop argument must be either of type Property or string")
         # Gets the indexable name of the property
         # it is either the value passed in as a string or the prop's internal name
         indexName = prop if type(prop) == str else prop.name
         # Assigns the new value to the property
         return self.Properties[indexName]["value"]
-    
+
     def modifyProperty(self, prop, modifier):
         """
         Modifies the value of a given property
@@ -93,15 +98,18 @@ class PropertyManager:
         """
         self.Initialise()
         # Data validation
-        if not isinstance(prop, PropertyBase) and type(prop) != str: raise TypeError("Prop argument must be either of type Property or string")
-        if not callable(modifier): raise TypeError("modifier argument must be a function pointer")
+        if not isinstance(prop, PropertyBase) and type(prop) != str:
+            raise TypeError(
+                "Prop argument must be either of type Property or string")
+        if not callable(modifier):
+            raise TypeError("modifier argument must be a function pointer")
         # Gets the indexable name of the property
         # it is either the value passed in as a string or the prop's internal name
         indexName = prop if type(prop) == str else prop.name
         # Assigns the new value to the property
-        self.Properties[indexName]["value"] = modifier(self.Properties[indexName]["value"])
+        self.Properties[indexName]["value"] = modifier(
+            self.Properties[indexName]["value"])
         return self
-
 
     @property
     def FillableProperties(self):
@@ -112,7 +120,8 @@ class PropertyManager:
         """
         self.Initialise()
         # Loops through all of the properties and returns the names of the fillable
-        fillable = [prop["definition"].name for prop in self.Properties.values() if prop["fillable"]]
+        fillable = [
+            prop["definition"].name for prop in self.Properties.values() if prop["fillable"]]
         return fillable
 
     @property
@@ -124,7 +133,8 @@ class PropertyManager:
         """
         self.Initialise()
         # Loops through all of the properties and returns the names of the result properties
-        results = [prop["definition"].name for prop in self.Properties.values() if prop["result"]]
+        results = [
+            prop["definition"].name for prop in self.Properties.values() if prop["result"]]
         return results
 
     def CheckFillables(self):
@@ -141,5 +151,6 @@ class PropertyManager:
         # Parses all of the fillable properties of the manager to make sure that they are met
         for prop in self.Properties.values():
             if prop["fillable"] and not prop["definition"].ParseValue(prop["value"]):
-                raise Exception("[Property: {}] Did not pass a property parse".format(prop["definition"].name))
+                raise Exception("[Property: {}] Did not pass a property parse".format(
+                    prop["definition"].name))
         return True

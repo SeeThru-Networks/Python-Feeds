@@ -1,6 +1,10 @@
 #!/usr/bin/env python
-import sys, os, toml, importlib
+import sys
+import os
+import toml
+import importlib
 from datetime import datetime
+
 
 class SeeThru_Feed():
     Base_Dir = os.getcwd()
@@ -15,13 +19,16 @@ class SeeThru_Feed():
         """
         SeeThru_Feed.Base_Dir = base_dir
         self.argv = argv
-        if len(argv) == 1: return
+        if len(argv) == 1:
+            return
         if argv[1] == "createfeedscheme":
-            if len(argv) < 3: return
+            if len(argv) < 3:
+                return
             schemeName = argv[2]
             self.CreateFeedScheme(schemeName)
         elif argv[1] == "createscript":
-            if len(argv) < 3: return
+            if len(argv) < 3:
+                return
             self.CreateScript(argv[2])
         elif argv[1] == "runfeedscheme":
             self.RunFeedScheme()
@@ -38,17 +45,22 @@ class SeeThru_Feed():
         self.CreateDir(schemeName)
         self.TouchFile(os.path.join(schemeName, '__init__.py'))
         self.CreateDir(os.path.join(schemeName, 'Scripts'))
-        self.TouchFile(os.path.join(os.path.join(schemeName, 'Scripts'), '__init__.py'))
+        self.TouchFile(os.path.join(os.path.join(
+            schemeName, 'Scripts'), '__init__.py'))
         self.CreateDir(os.path.join(schemeName, 'Scripts/Vendor'))
-        self.TouchFile(os.path.join(os.path.join(schemeName, 'Scripts/Vendor'), '__init__.py'))
+        self.TouchFile(os.path.join(os.path.join(
+            schemeName, 'Scripts/Vendor'), '__init__.py'))
         self.CreateDir(os.path.join(schemeName, 'Components'))
-        self.TouchFile(os.path.join(os.path.join(schemeName, 'Components'), '__init__.py'))
+        self.TouchFile(os.path.join(os.path.join(
+            schemeName, 'Components'), '__init__.py'))
         self.CreateDir(os.path.join(schemeName, 'Components/Vendor'))
-        self.TouchFile(os.path.join(os.path.join(schemeName, 'Components/Vendor'), '__init__.py'))
+        self.TouchFile(os.path.join(os.path.join(
+            schemeName, 'Components/Vendor'), '__init__.py'))
         self.CreateDir(os.path.join(schemeName, 'Outputs'))
 
         # Creates the new script
-        scriptFile = open(os.path.join(os.path.dirname(__file__), 'templates/Manage_Template.template'), 'r')
+        scriptFile = open(os.path.join(os.path.dirname(
+            __file__), 'templates/Manage_Template.template'), 'r')
         scriptTemplate = scriptFile.read()
         # Opens the new script file
         newScript = open(os.path.join(schemeName, 'manage.py'), "w")
@@ -57,19 +69,25 @@ class SeeThru_Feed():
         newScript.close()
         scriptFile.close()
 
-        if "--no-config" in self.argv: return
+        if "--no-config" in self.argv:
+            return
 
         # Creates a template config file
         # Opens the template file
-        templateConfig = open(os.path.join(os.path.dirname(__file__), 'templates/configHeader_Template.toml'), 'r')
+        templateConfig = open(os.path.join(os.path.dirname(
+            __file__), 'templates/configHeader_Template.toml'), 'r')
         configHeader = templateConfig.read()
         # Sets the default information
         configHeader = configHeader.replace(r"{{ Scheme_Name }}", schemeName)
-        configHeader = configHeader.replace(r"{{ Scheme_Description }}", "Enter a description for your feed scheme")
-        configHeader = configHeader.replace(r"{{ Scheme_Author }}", "Enter the author of your feed scheme")
-        configHeader = configHeader.replace(r"{{ Scheme_Owner }}", "Enter the owner for your feed scheme")
-        configHeader = configHeader.replace(r"{{ Creation_Date }}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        
+        configHeader = configHeader.replace(
+            r"{{ Scheme_Description }}", "Enter a description for your feed scheme")
+        configHeader = configHeader.replace(
+            r"{{ Scheme_Author }}", "Enter the author of your feed scheme")
+        configHeader = configHeader.replace(
+            r"{{ Scheme_Owner }}", "Enter the owner for your feed scheme")
+        configHeader = configHeader.replace(
+            r"{{ Creation_Date }}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
         # Opens a new config file for the feed scheme
         schemeConfig = open(os.path.join(schemeName, 'config.toml'), 'w')
         # Writes the config header
@@ -87,33 +105,41 @@ class SeeThru_Feed():
             scriptName {[type]} -- [description]
         """
         # Creates the new script
-        scriptFile = open(os.path.join(os.path.dirname(__file__), 'templates/Script_Template.template'), 'r')
+        scriptFile = open(os.path.join(os.path.dirname(
+            __file__), 'templates/Script_Template.template'), 'r')
         scriptTemplate = scriptFile.read()
         # Sets the default information
-        scriptTemplate = scriptTemplate.replace(r"{{ Script_Name }}", scriptName)
+        scriptTemplate = scriptTemplate.replace(
+            r"{{ Script_Name }}", scriptName)
         # Opens the new script file
-        newScript = open(os.path.join(SeeThru_Feed.Base_Dir, "Scripts/{}.py".format(scriptName)), "w")
+        newScript = open(os.path.join(SeeThru_Feed.Base_Dir,
+                                      "Scripts/{}.py".format(scriptName)), "w")
         newScript.write(scriptTemplate)
         # Closes the files
         newScript.close()
         scriptFile.close()
 
-        if "--no-config" in self.argv: return
+        if "--no-config" in self.argv:
+            return
 
-        scriptConfigTemplate = open(os.path.join(os.path.dirname(__file__), 'templates/configScript_Template.toml'), 'r')
+        scriptConfigTemplate = open(os.path.join(os.path.dirname(
+            __file__), 'templates/configScript_Template.toml'), 'r')
         configScript = scriptConfigTemplate.read()
         # Sets the default information
         configScript = configScript.replace(r"{{ Script_Name }}", scriptName)
-        configScript = configScript.replace(r"{{ Script_Object_Path }}", "Scripts.{}@{}".format(scriptName, scriptName))
-        configScript = configScript.replace(r"{{ Script_Output_Path }}", "Outputs/{}.json".format(scriptName))
+        configScript = configScript.replace(
+            r"{{ Script_Object_Path }}", "Scripts.{}@{}".format(scriptName, scriptName))
+        configScript = configScript.replace(
+            r"{{ Script_Output_Path }}", "Outputs/{}.json".format(scriptName))
 
         # Opens the config file for the feed scheme
-        schemeConfig = open(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml'), 'a')
+        schemeConfig = open(os.path.join(
+            SeeThru_Feed.Base_Dir, 'config.toml'), 'a')
         schemeConfig.write(configScript)
         # Closes the files
         scriptConfigTemplate.close()
         schemeConfig.close()
-    
+
     def RunFeedScheme(self):
         """
         Runs the feed scheme
@@ -123,10 +149,11 @@ class SeeThru_Feed():
             # Opens the file and parses it
             envFile = open(os.path.join(SeeThru_Feed.Base_Dir, '.env'), "r")
             iter = 0
-            while True: 
+            while True:
                 iter += 1
-                line = envFile.readline() 
-                if not line: break
+                line = envFile.readline()
+                if not line:
+                    break
                 line = line.split("#")[0]
                 # Finds key value pairs
                 if "=" in line:
@@ -134,20 +161,25 @@ class SeeThru_Feed():
 
                     key = key.strip("\n")
                     key = key.strip(" ")
-                    if key.startswith('"'): key = key.strip('"')
-                    elif key.startswith("'"): key = key.strip("'")
+                    if key.startswith('"'):
+                        key = key.strip('"')
+                    elif key.startswith("'"):
+                        key = key.strip("'")
 
                     value = value.strip("\n")
                     value = value.strip(" ")
-                    if value.startswith('"'): value = value.strip('"')
-                    elif value.startswith("'"): value = value.strip("'")
+                    if value.startswith('"'):
+                        value = value.strip('"')
+                    elif value.startswith("'"):
+                        value = value.strip("'")
                     os.environ[key] = value
             pass
         # Opens the config file and parses it
         if not os.path.exists(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml')):
             print("[Error] There is no config file")
             return
-        schemeConfig = open(os.path.join(SeeThru_Feed.Base_Dir, 'config.toml'), 'r')
+        schemeConfig = open(os.path.join(
+            SeeThru_Feed.Base_Dir, 'config.toml'), 'r')
         scheme = toml.loads(schemeConfig.read())
         schemeConfig.close()
 
@@ -156,9 +188,11 @@ class SeeThru_Feed():
             # Splits the object's module and the object's name from the Script_Object_Path
             objectModule = None
             objectName = None
-            objectComponents = script[Script_Name]['Meta']['Script_Object_Path'].split('@')
+            objectComponents = script[Script_Name]['Meta']['Script_Object_Path'].split(
+                '@')
             objectModule = objectComponents[0]
-            objectName = objectComponents[1] if len(objectComponents) > 1 else None
+            objectName = objectComponents[1] if len(
+                objectComponents) > 1 else None
 
             # Imports the script
             module = importlib.import_module(objectModule)
@@ -175,16 +209,19 @@ class SeeThru_Feed():
                     try:
                         value = dict(value)
                         if "type" not in value or "name" not in value:
-                            print("[Error] Incorrectly configured value: {}".format(value))
+                            print(
+                                "[Error] Incorrectly configured value: {}".format(value))
                             return
                         # Checks for which type of deferred value it is
                         if value["type"] == "env":
                             # Looks for the value in the env file
                             if value["name"] not in os.environ:
-                                print("[Error] Name {} not in env".format(value["name"]))
+                                print("[Error] Name {} not in env".format(
+                                    value["name"]))
                                 return
                             value = os.environ[value["name"]]
-                    except: pass
+                    except:
+                        pass
                     finally:
                         scriptInstance.SetProperty(fillable, value)
 
@@ -206,6 +243,7 @@ class SeeThru_Feed():
         """
         path = os.path.join(SeeThru_Feed.Base_Dir, path)
         os.mkdir(path)
+
     def TouchFile(self, path):
         """
         Creates a new file
@@ -216,6 +254,7 @@ class SeeThru_Feed():
         path = os.path.join(SeeThru_Feed.Base_Dir, path)
         f = open(path, "w")
         f.close()
+
 
 def exec():
     SeeThru_Feed(sys.argv)
