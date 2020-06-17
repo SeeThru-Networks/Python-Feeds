@@ -23,3 +23,32 @@ class PortOpen(ComponentBase):
             self.SetProperty(PortOpen.SUCCEEDED, True)
         except:
             self.SetProperty(PortOpen.SUCCEEDED, False)
+
+class UDPPortOpen(ComponentBase):
+    TARGET_HOST = FillableProperty(name="target_host", required=True, ofType=str)
+    PORT = FillableProperty(name="port", default=443, required=True, ofType=int)
+    #Stores whether the udp data send was successful
+    SUCCEEDED = ResultProperty(name="succeeded")
+    #If not successful, then this stores the os level error number for the socket connection
+    ERROR_NO = ResultProperty(name="error_no", default=0)
+
+    Component_Title = "UDPPortOpen Socket Component"
+    Component_Description = "This component will test to see if it can send data over a udp socket with the given host and port"
+    Component_Author = "SeeThru Networks"
+    Component_Owner = "SeeThru Networks"
+
+    def Component_Execute(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(5)
+
+        try:
+            # Attempts a connection to the socket
+            sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+            sock.sendto(b"Test", (self.GetProperty(self.TARGET_HOST), self.GetProperty(self.PORT)))
+            sock.close()
+            self.SetProperty(self.SUCCEEDED, True)
+        except socket.error as error:
+            self.SetProperty(self.ERROR_NO, error.errno)
+            self.SetProperty(self.SUCCEEDED, False)
+        except:
+            self.SetProperty(self.SUCCEEDED, False)
