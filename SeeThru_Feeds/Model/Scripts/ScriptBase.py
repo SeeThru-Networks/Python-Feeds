@@ -115,6 +115,16 @@ class ScriptBase(PropertyManager):
         if (self.GetInternalAlias() != None): print("--{}".format(self.GetInternalAlias()))
         print("Status: {}\nMessage: {}".format(self.ScriptResult.status, self.ScriptResult.message))
         return self
+        
+    def GetResult(self):
+        """
+        Returns the ScriptResult of the script, it will evalute the script if script result doesn't exist
+
+        Returns:
+            ScriptResult: The script result of the script
+        """
+        if "ScriptResult" not in dir(self) or type(self.Properties) != ScriptResult: self.EvaluateScript()
+        return self.ScriptResult
     
     # The Script_Title attribute should be set in your script
     Script_Title = None
@@ -240,5 +250,10 @@ class ScriptBase(PropertyManager):
 
         Arguments:
             alias {String} -- The new internal alias
+
+        Returns:
+            ScriptBase -- The script
         """
         self.Script_Alias = alias
+
+        return self

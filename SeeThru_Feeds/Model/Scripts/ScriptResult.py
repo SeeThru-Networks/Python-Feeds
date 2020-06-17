@@ -45,3 +45,20 @@ class ScriptResult:
     def GenerateJson(self):
         if self.status == None or self.message == None or self.timestamp == None: raise Exception("Not all values are provided for the result")
         return "{\"color\":\"%s\", \"message\":\"%s\", \"time\":\"%s\"}" % (self.status, self.message, self.timestamp)
+
+    def GetStatus(self):
+        """
+        Returns the status of the result
+
+        Returns:
+            string: The status
+        """
+        return self.status
+    def GetMessage(self):
+        """
+        Returns the message of the result
+
+        Returns:
+            string: The message
+        """
+        return self.message
