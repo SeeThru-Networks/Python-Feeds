@@ -4,9 +4,11 @@ from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultPr
 from SeeThru_Feeds.Library.Components.Socket import PortOpen
 import socket
 
+
 class TCPPortOpen(ScriptBase):
     HOST = FillableProperty(name="host", required=True, ofType=str)
-    PORT = FillableProperty(name="port", required=False, ofType=[str, int], default=443)
+    PORT = FillableProperty(name="port", required=False,
+                            ofType=[str, int], default=443)
 
     IS_PORT_OPEN = ResultProperty(name="is_port_open")
 
@@ -16,10 +18,11 @@ class TCPPortOpen(ScriptBase):
     Script_Owner = "SeeThru Networks"
 
     # ------ Script Overrides ------
-    def Script_Run(self): 
+    def Script_Run(self):
         host = self.GetProperty(self.HOST)
         port = self.GetProperty(self.PORT)
-        is_port_open = PortOpen().SetProperty(PortOpen.TARGET_HOST, host).SetProperty(PortOpen.PORT, port).Run().GetProperty(PortOpen.SUCCEEDED)
+        is_port_open = PortOpen().SetProperty(PortOpen.TARGET_HOST, host).SetProperty(
+            PortOpen.PORT, port).Run().GetProperty(PortOpen.SUCCEEDED)
         self.SetProperty(self.IS_PORT_OPEN, is_port_open)
 
     def Script_Evaluate(self, result):
@@ -29,4 +32,5 @@ class TCPPortOpen(ScriptBase):
         # Changes to red if the port is closed
         if not self.GetProperty(self.IS_PORT_OPEN):
             result.SetStatus("red")
-            result.SetMessage( "Could not create a tcp socket to given host and port")
+            result.SetMessage(
+                "Could not create a tcp socket to given host and port")

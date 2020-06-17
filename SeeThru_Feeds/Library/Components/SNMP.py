@@ -2,9 +2,11 @@ from SeeThru_Feeds.Model.Components.ComponentBase import ComponentBase
 from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
 from pysnmp.hlapi import *
 
+
 class SNMPWalkToOID(ComponentBase):
     SNMP_HOST = FillableProperty(name="snmp_host", required=True, ofType=str)
-    SNMP_PORT = FillableProperty(name="snmp_port", default=161, required=True, ofType=int)
+    SNMP_PORT = FillableProperty(
+        name="snmp_port", default=161, required=True, ofType=int)
     COMMUNITY = FillableProperty(name="community", required=True)
 
     VALUE = ResultProperty(name="oid_value")
@@ -21,7 +23,8 @@ class SNMPWalkToOID(ComponentBase):
         for errorIndication, errorStatus, errorIndex, varBinds in bulkCmd(
                 SnmpEngine(),
                 CommunityData(self.GetProperty(self.COMMUNITY)),
-                UdpTransportTarget((self.GetProperty(self.SNMP_HOST), self.GetProperty(self.SNMP_PORT))),
+                UdpTransportTarget(
+                    (self.GetProperty(self.SNMP_HOST), self.GetProperty(self.SNMP_PORT))),
                 ContextData(),
                 0, 50,
                 ObjectType(ObjectIdentity(oid)),
