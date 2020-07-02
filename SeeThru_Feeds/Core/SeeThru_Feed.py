@@ -1,13 +1,42 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import os
 import toml
 import importlib
+import argparse
 from datetime import datetime
+
+
+class Program_Argument:
+    def __init__(self, *args, **kargs):
+        self.args = args
+        self.extra = kargs
 
 
 class SeeThru_Feed():
     Base_Dir = os.getcwd()
+    Programs = {}
+
+    @classmethod
+    def SetupPrograms(cls):
+        cls.Programs = {
+            "createfeedscheme": {
+                "procedure": SeeThru_Feed.CreateFeedScheme,
+                "arguments": [
+                    Program_Argument("name", action="store", type=str)
+                ]
+            },
+            "createscript": {
+                "procedure": SeeThru_Feed.CreateScript,
+                "arguments": {
+                    Program_Argument("name", action="store", type=str)
+                }
+            },
+            "runfeedscheme": {
+                "procedure": SeeThru_Feed.RunFeedScheme,
+                "arguments": []
+            }
+        }
 
     def __init__(self, argv, base_dir=os.getcwd()):
         """
@@ -18,52 +47,64 @@ class SeeThru_Feed():
             base_dir {string} -- The base directory to work from
         """
         SeeThru_Feed.Base_Dir = base_dir
+        SeeThru_Feed.SetupPrograms()
         self.argv = argv
-        if len(argv) == 1:
-            return
-        if argv[1] == "createfeedscheme":
-            if len(argv) < 3:
-                return
-            schemeName = argv[2]
-            self.CreateFeedScheme(schemeName)
-        elif argv[1] == "createscript":
-            if len(argv) < 3:
-                return
-            self.CreateScript(argv[2])
-        elif argv[1] == "runfeedscheme":
-            self.RunFeedScheme()
 
-    def CreateFeedScheme(self, schemeName):
+        if len(argv) == 1:  # If no arguments were given, print a help message
+            return
+
+        # Runs the appropriate program
+        if argv[1] in SeeThru_Feed.Programs.keys():
+            # Gets the program
+            try:
+                programName = argv[1]
+                program = SeeThru_Feed.Programs[argv[1]]
+                argv = argv[2:]
+            except:
+                print("Please provide a valid program")
+                return
+            # Creates the argparse program
+            parser = argparse.ArgumentParser(prog=programName)
+            # For every argument defined in the program
+            for argument in program["arguments"]:
+                parser.add_argument(*argument.args, **argument.extra)
+            # Parses the arguments
+            args = parser.parse_args(argv)
+
+            program["procedure"](self, **vars(args))
+            return
+
+    def CreateFeedScheme(self, name):
         """
         Creates a new feed scheme of the given name in the
         current working directory
 
         Arguments:
-            schemeName {String} -- The name of the feed scheme
+            name {String} -- The name of the feed scheme
         """
         # Creates the directory structure
-        self.CreateDir(schemeName)
-        self.TouchFile(os.path.join(schemeName, '__init__.py'))
-        self.CreateDir(os.path.join(schemeName, 'Scripts'))
+        self.CreateDir(name)
+        self.TouchFile(os.path.join(name, '__init__.py'))
+        self.CreateDir(os.path.join(name, 'Scripts'))
         self.TouchFile(os.path.join(os.path.join(
-            schemeName, 'Scripts'), '__init__.py'))
-        self.CreateDir(os.path.join(schemeName, 'Scripts/Vendor'))
+            name, 'Scripts'), '__init__.py'))
+        self.CreateDir(os.path.join(name, 'Scripts/Vendor'))
         self.TouchFile(os.path.join(os.path.join(
-            schemeName, 'Scripts/Vendor'), '__init__.py'))
-        self.CreateDir(os.path.join(schemeName, 'Components'))
+            name, 'Scripts/Vendor'), '__init__.py'))
+        self.CreateDir(os.path.join(name, 'Components'))
         self.TouchFile(os.path.join(os.path.join(
-            schemeName, 'Components'), '__init__.py'))
-        self.CreateDir(os.path.join(schemeName, 'Components/Vendor'))
+            name, 'Components'), '__init__.py'))
+        self.CreateDir(os.path.join(name, 'Components/Vendor'))
         self.TouchFile(os.path.join(os.path.join(
-            schemeName, 'Components/Vendor'), '__init__.py'))
-        self.CreateDir(os.path.join(schemeName, 'Outputs'))
+            name, 'Components/Vendor'), '__init__.py'))
+        self.CreateDir(os.path.join(name, 'Outputs'))
 
         # Creates the new script
-        scriptFile = open(os.path.join(os.path.dirname(
-            __file__), 'templates/Manage_Template.template'), 'r')
+        scriptFile = open(os.path.join(os.path.dirname(__file__),
+                                       'templates/Manage_Template.template'), 'r')
         scriptTemplate = scriptFile.read()
         # Opens the new script file
-        newScript = open(os.path.join(schemeName, 'manage.py'), "w")
+        newScript = open(os.path.join(name, 'manage.py'), "w")
         newScript.write(scriptTemplate)
         # Closes the files
         newScript.close()
@@ -78,7 +119,7 @@ class SeeThru_Feed():
             __file__), 'templates/configHeader_Template.toml'), 'r')
         configHeader = templateConfig.read()
         # Sets the default information
-        configHeader = configHeader.replace(r"{{ Scheme_Name }}", schemeName)
+        configHeader = configHeader.replace(r"{{ Scheme_Name }}", name)
         configHeader = configHeader.replace(
             r"{{ Scheme_Description }}", "Enter a description for your feed scheme")
         configHeader = configHeader.replace(
@@ -89,20 +130,20 @@ class SeeThru_Feed():
             r"{{ Creation_Date }}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         # Opens a new config file for the feed scheme
-        schemeConfig = open(os.path.join(schemeName, 'config.toml'), 'w')
+        schemeConfig = open(os.path.join(name, 'config.toml'), 'w')
         # Writes the config header
         schemeConfig.write(configHeader)
         # Closes the files
         templateConfig.close()
         schemeConfig.close()
 
-    def CreateScript(self, scriptName):
+    def CreateScript(self, name):
         """
         Creates a new script and adds the script to the config file
 
         Arguments:
-            schemeName {String} -- The name of the feed scheme
-            scriptName {[type]} -- [description]
+            name {String} -- The name of the feed scheme
+            name {[type]} -- [description]
         """
         # Creates the new script
         scriptFile = open(os.path.join(os.path.dirname(
@@ -110,10 +151,10 @@ class SeeThru_Feed():
         scriptTemplate = scriptFile.read()
         # Sets the default information
         scriptTemplate = scriptTemplate.replace(
-            r"{{ Script_Name }}", scriptName)
+            r"{{ Script_Name }}", name)
         # Opens the new script file
         newScript = open(os.path.join(SeeThru_Feed.Base_Dir,
-                                      "Scripts/{}.py".format(scriptName)), "w")
+                                      "Scripts/{}.py".format(name)), "w")
         newScript.write(scriptTemplate)
         # Closes the files
         newScript.close()
@@ -126,11 +167,11 @@ class SeeThru_Feed():
             __file__), 'templates/configScript_Template.toml'), 'r')
         configScript = scriptConfigTemplate.read()
         # Sets the default information
-        configScript = configScript.replace(r"{{ Script_Name }}", scriptName)
+        configScript = configScript.replace(r"{{ Script_Name }}", name)
         configScript = configScript.replace(
-            r"{{ Script_Object_Path }}", "Scripts.{}@{}".format(scriptName, scriptName))
+            r"{{ Script_Object_Path }}", "Scripts.{}@{}".format(name, name))
         configScript = configScript.replace(
-            r"{{ Script_Output_Path }}", "Outputs/{}.json".format(scriptName))
+            r"{{ Script_Output_Path }}", "Outputs/{}.json".format(name))
 
         # Opens the config file for the feed scheme
         schemeConfig = open(os.path.join(
@@ -144,6 +185,7 @@ class SeeThru_Feed():
         """
         Runs the feed scheme
         """
+        return
         # Parses a .env file if one exists
         if os.path.exists(os.path.join(SeeThru_Feed.Base_Dir, '.env')):
             # Opens the file and parses it
