@@ -6,7 +6,7 @@ import requests
 class HTTPBase(ComponentBase):
     URL = FillableProperty(name="url", required=True)
     COOKIES = FillableProperty(name="cookies", required=False)
-    HEADERS = FillableProperty(name="header", oftype=dict, required=False, default=None)
+    HEADERS = FillableProperty(name="header", required=False, default=None, ofType=dict)
     RESPONSE = ResultProperty(name="response")
     STATUS_CODE = ResultProperty(name="status_code")
     RESPONSE_CONTENT = ResultProperty(name="response_content")
