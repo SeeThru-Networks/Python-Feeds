@@ -6,6 +6,7 @@ import requests
 class HTTPBase(ComponentBase):
     URL = FillableProperty(name="url", required=True)
     COOKIES = FillableProperty(name="cookies", required=False)
+    HEADERS + FillableProperty(name="header", type=dict, required=False, default=None)
     RESPONSE = ResultProperty(name="response")
     STATUS_CODE = ResultProperty(name="status_code")
     RESPONSE_CONTENT = ResultProperty(name="response_content")
@@ -20,7 +21,7 @@ class HTTPBase(ComponentBase):
 class HTTPGet(HTTPBase):
     def Component_Execute(self):
         response = requests.get(self.GetProperty(
-            HTTPBase.URL), cookies=self.GetProperty(HTTPBase.COOKIES))
+            HTTPBase.URL), cookies=self.GetProperty(HTTPBase.COOKIES), headers=self.GetProperty(HTTPBase.HEADERS))
 
         self.SetProperty(HTTPGet.RESPONSE, response)
         self.SetProperty(HTTPGet.STATUS_CODE, response.status_code)
@@ -36,12 +37,15 @@ class HTTPPost(HTTPBase):
         name="content_type", default="application/x-www-form-urlencoded")
 
     def Component_Execute(self):
+        if self.GetProperty(HTTPBase.HEADERS) is None:
+            self.SetProperty(HTTPBase.HEADERS, {'Content-Type': self.GetProperty(self.CONTENT_TYPE)})
+
         response = requests.post(
             self.GetProperty(HTTPPost.URL),
             cookies=self.GetProperty(HTTPPost.COOKIES),
             data=self.GetProperty(HTTPPost.DATA),
             json=self.GetProperty(HTTPPost.JSON),
-            headers={'Content-Type': self.GetProperty(self.CONTENT_TYPE)}
+            headers=self.GetProperty(HTTPBase.HEADERS)
         )
         self.SetProperty(HTTPPost.RESPONSE, response)
         self.SetProperty(HTTPPost.STATUS_CODE, response.status_code)
