@@ -11,6 +11,7 @@ class ScriptBase(PropertyManager):
         ! If you must use __init__ in the subclass, you must call super().__init__() from that initialiser
         ! otherwise override Prepare and that'll be called after the super class is initialised
         """
+        super().__init__()
         self.OutputPath = None
 
         self.Prepare(*args, **kwargs)
@@ -39,7 +40,7 @@ class ScriptBase(PropertyManager):
         Returns:
             ScriptBase -- The script
         """
-        # Ensures that all of the fillables are met before the script is ran
+        # All fillables are checked on the setter, this performs one final check
         self.CheckFillables()
         self.Script_Run()
         return self

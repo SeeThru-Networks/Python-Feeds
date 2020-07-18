@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from SeeThru_Feeds.Core.SeeThru_Feed import SeeThru_Feed
 import sys, os
 

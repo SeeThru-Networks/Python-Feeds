@@ -2,11 +2,15 @@ from SeeThru_Feeds.Model.Properties.Properties import *
 
 
 class PropertyManager:
+    def __init__(self):
+        self.Initialise()
+
     def Initialise(self):
         """
-        Ensures that the properties attribute is set
+        Ensures that the Properties attribute is set
         """
         # Initialises the properties dictionary for the manager
+        # This stores new instances of every property defined
         if "Properties" not in dir(self) or type(self.Properties) != dict:
             self.Properties = {}
             # --Fills the properties dict with the the subclass' properties
@@ -18,16 +22,22 @@ class PropertyManager:
                 if isinstance(prop, PropertyBase):
                     # Uses either a name defined in the property or the variable's name
                     name = prop.name if prop.name != None else attr
-                    self.Properties[name] = {
-                        "definition": prop,
-                        "fillable": isinstance(prop, FillableProperty),
-                        "result": isinstance(prop, ResultProperty),
-                        "value": prop.default
-                    }
+                    
+                    # Creates a new instance of the property
+                    # This is used to store the property value
+                    instanceProp = prop.NewInstance(prop)
+                    instanceProp._value = instanceProp.default  # Assigns the default value, ! This bypasses validation
+                    # Stores the instance property in the Properties dictionary
+                    self.Properties[name] = instanceProp
+
                     # Sets the properties internal name to the name obtained
-                    # This sets the name for the property across all instances
-                    # of the component, as the property is a static variable
-                    prop.name = name
+                    instanceProp.name = name
+
+                    # Makes the property instance available 
+                    # by both the variable name and internal name
+                    self.__setattr__(attr, instanceProp)
+                    self.__setattr__(name, instanceProp)
+
 
     def SetProperty(self, prop, value):
         """
@@ -54,7 +64,7 @@ class PropertyManager:
         # it is either the value passed in as a string or the prop's internal name
         indexName = prop if type(prop) == str else prop.name
         # Assigns the new value to the property
-        self.Properties[indexName]["value"] = value
+        self.Properties[indexName].value = value
         return self
 
     def GetProperty(self, prop):
@@ -78,8 +88,8 @@ class PropertyManager:
         # Gets the indexable name of the property
         # it is either the value passed in as a string or the prop's internal name
         indexName = prop if type(prop) == str else prop.name
-        # Assigns the new value to the property
-        return self.Properties[indexName]["value"]
+        # Returns the value of the property
+        return self.Properties[indexName].value
 
     def modifyProperty(self, prop, modifier):
         """
@@ -107,8 +117,8 @@ class PropertyManager:
         # it is either the value passed in as a string or the prop's internal name
         indexName = prop if type(prop) == str else prop.name
         # Assigns the new value to the property
-        self.Properties[indexName]["value"] = modifier(
-            self.Properties[indexName]["value"])
+        self.Properties[indexName].value = modifier(
+            self.Properties[indexName].value)
         return self
 
     @property
@@ -116,12 +126,11 @@ class PropertyManager:
         """Returns a list of the fillable properties for the manager
 
         Returns:
-            list -- A list of names of the fillable properties in the manager
+            list -- A list of the instances of fillable properties in the manager
         """
         self.Initialise()
         # Loops through all of the properties and returns the names of the fillable
-        fillable = [
-            prop["definition"].name for prop in self.Properties.values() if prop["fillable"]]
+        fillable = [prop for prop in self.Properties.values() if isinstance(prop, FillableProperty)]
         return fillable
 
     @property
@@ -129,12 +138,11 @@ class PropertyManager:
         """Returns a list of the result properties for the manager
 
         Returns:
-            list -- A list of names of the result properties in the manager
+            list -- A list of the instances of result properties in the manager
         """
         self.Initialise()
         # Loops through all of the properties and returns the names of the result properties
-        results = [
-            prop["definition"].name for prop in self.Properties.values() if prop["result"]]
+        results = [prop for prop in self.Properties.values() if isinstance(prop, ResultProperty)]
         return results
 
     def CheckFillables(self):
@@ -149,8 +157,7 @@ class PropertyManager:
         """
         self.Initialise()
         # Parses all of the fillable properties of the manager to make sure that they are met
-        for prop in self.Properties.values():
-            if prop["fillable"] and not prop["definition"].ParseValue(prop["value"]):
-                raise Exception("[Property: {}] Did not pass a property parse".format(
-                    prop["definition"].name))
+        for prop in self.FillableProperties:
+            if not prop.ParseValue(prop.value):
+                raise Exception("[Property: {}] Did not pass a property parse".format(prop.name))
         return True
