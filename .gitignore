@@ -1,4 +1,6 @@
 *DS_Store
 *__pycache__/
 *.swp
-
+SeeThru_Feeds.egg-info/*
+build/*
+dist/*
