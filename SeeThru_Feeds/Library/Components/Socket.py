@@ -5,9 +5,9 @@ import socket
 
 class PortOpen(ComponentBase):
     TARGET_HOST = FillableProperty(
-        name="target_host", required=True, ofType=str)
+        name="target_host", required=True, of_type=str)
     PORT = FillableProperty(name="port", default=443,
-                            required=True, ofType=int)
+                            required=True, of_type=int)
     SUCCEEDED = ResultProperty(name="succeeded")
 
     Component_Title = "PortOpen Socket Component"
@@ -15,25 +15,25 @@ class PortOpen(ComponentBase):
     Component_Author = "SeeThru Networks"
     Component_Owner = "SeeThru Networks"
 
-    def Component_Execute(self):
+    def component_execute(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(2)
 
         try:
             # Attempts a connection to the socket
-            sock.connect((self.GetProperty(PortOpen.TARGET_HOST),
-                          self.GetProperty(PortOpen.PORT)))
+            sock.connect((self.get_property(PortOpen.TARGET_HOST),
+                          self.get_property(PortOpen.PORT)))
             sock.close()
-            self.SetProperty(PortOpen.SUCCEEDED, True)
+            self.set_property(PortOpen.SUCCEEDED, True)
         except:
-            self.SetProperty(PortOpen.SUCCEEDED, False)
+            self.set_property(PortOpen.SUCCEEDED, False)
 
 
 class UDPPortOpen(ComponentBase):
     TARGET_HOST = FillableProperty(
-        name="target_host", required=True, ofType=str)
+        name="target_host", required=True, of_type=str)
     PORT = FillableProperty(name="port", default=443,
-                            required=True, ofType=int)
+                            required=True, of_type=int)
     # Stores whether the udp data send was successful
     SUCCEEDED = ResultProperty(name="succeeded")
     # If not successful, then this stores the os level error number for the socket connection
@@ -44,19 +44,19 @@ class UDPPortOpen(ComponentBase):
     Component_Author = "SeeThru Networks"
     Component_Owner = "SeeThru Networks"
 
-    def Component_Execute(self):
+    def component_execute(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(5)
 
         try:
             # Attempts a connection to the socket
             sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-            sock.sendto(b"Test", (self.GetProperty(
-                self.TARGET_HOST), self.GetProperty(self.PORT)))
+            sock.sendto(b"Test", (self.get_property(
+                self.TARGET_HOST), self.get_property(self.PORT)))
             sock.close()
-            self.SetProperty(self.SUCCEEDED, True)
+            self.set_property(self.SUCCEEDED, True)
         except socket.error as error:
-            self.SetProperty(self.ERROR_NO, error.errno)
-            self.SetProperty(self.SUCCEEDED, False)
+            self.set_property(self.ERROR_NO, error.errno)
+            self.set_property(self.SUCCEEDED, False)
         except:
-            self.SetProperty(self.SUCCEEDED, False)
+            self.set_property(self.SUCCEEDED, False)

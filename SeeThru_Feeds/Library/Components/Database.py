@@ -15,16 +15,16 @@ class ConnectionOpen(ComponentBase):
     Component_Author = "SeeThru Networks"
     Component_Owner = "SeeThru Networks"
 
-    def Component_Execute(self):
+    def component_execute(self):
         try:
             connection = mysql.connector.connect(
-                host=self.GetProperty(ConnectionOpen.HOST),
-                user=self.GetProperty(ConnectionOpen.USER),
-                passwd=self.GetProperty(ConnectionOpen.PASSWD),
-                database=self.GetProperty(ConnectionOpen.DATABASE)
+                host=self.get_property(ConnectionOpen.HOST),
+                user=self.get_property(ConnectionOpen.USER),
+                passwd=self.get_property(ConnectionOpen.PASSWD),
+                database=self.get_property(ConnectionOpen.DATABASE)
             )
             connection.close()
             # Assumes that a valid connection was made
-            self.SetProperty(ConnectionOpen.CAN_CONNECT, True)
+            self.set_property(ConnectionOpen.CAN_CONNECT, True)
         except:
-            self.SetProperty(ConnectionOpen.CAN_CONNECT, False)
+            self.set_property(ConnectionOpen.CAN_CONNECT, False)
