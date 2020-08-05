@@ -1,42 +1,81 @@
-class PropertyBase():
-    # Checks that the value given has met the conditions of the property
-    # Arguments:    -A value    -Any
-    def ParseValue(self, value):
+from copy import copy
+from SeeThru_Feeds.Model.Properties.Exceptions import InvalidPropertyType, PropertyRequired, InvalidPropertyValue, \
+    PropertyValidatorError
+
+
+class PropertyBase:
+    def __init__(self, name):
+        if type(name) != str and name is not None:
+            raise TypeError("Invalid type for 'name'")
+        self.name = name
+        self._value = None
+
+    def parse_value(self, value):
         """
         Checks that the value given has met the conditions of the property
 
         Arguments:
-            value {Any} -- The value associated with this property
+            value (any): The value associated with this property
 
         Raises:
             NotImplementedError: The function hasn't been implemented yet for the subclass
             Exception: The property is None but it is required
 
         Returns:
-            [boolean] -- Whether the value given is valid for the property
+            bool: Whether the value given is valid for the property
         """
-        raise NotImplementedError(
-            "ParseValue function not implemented yet for property")
+        raise NotImplementedError("parse_value function not implemented yet for property")
+
+    @staticmethod
+    def new_instance(self):
+        """Returns a new instance of the property, this is used by the property manager
+
+        Returns:
+            PropertyBase: The property copy
+        """
+        return copy(self)
+
+    @property
+    def value(self):
+        """Provides a getter for the value of an instance of the property
+        Parses the instance's value
+
+        Returns:
+            Any: The parsed value of the property
+        """
+        # The value should be provided by the PropertyManager
+        if not hasattr(self, "_value"):
+            raise Exception("Value attribute has not been set for property")
+
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        """Sets the value to the property
+
+        Args:
+            value (any): The value to assign to the property
+
+        """
+        # Validates that the value given is valid
+        if self.parse_value(value):
+            self._value = value
 
 
 class FillableProperty(PropertyBase):
-    def __init__(self, name=None, default=None, required=True, ofType=None, valueSet=None, custom=None):
+    def __init__(self, name=None, default=None, required=False, of_type=None, value_set=None, custom=None):
         """
-        Defines the fillable property with the parameters that the property should take,
-        the property is a static member of a component class and should not be instance
-        dependent
+        Defines the fillable property with the parameters that the property should take
 
-        Keyword Arguments:
-            name {string} -- The internal name of the property (default: {None})
-            defailt {Any} -- A default value
-            required {bool} -- Whether a value of the property has to be given, i.e. not None (default: {True})
-            ofType {Type, [Type]} -- A type or set of types that a value of the property must be (default: {None})
-            valueSet {Set, list, range} -- A set of values that the property must be (default: {None})
-            func {function pointer} -- A custom function to run to check the value that must return a boolean (default: {None})
+        Args:
+            name (str): The internal name of the property
+            default (any): A default value
+            required (bool): Whether this property is required
+            of_type (type, [type]): A type or a set of types that the property can be
+            value_set (set, list, range]): A set of values that the property can be
+            custom (lambda): A lambda function to check the value against
         """
-        if type(name) != str and name != None:
-            raise TypeError("Invalid type for 'name'")
-        self.name = name
+        super().__init__(name)
 
         self.default = default
 
@@ -44,48 +83,92 @@ class FillableProperty(PropertyBase):
             raise TypeError("Invalid type for 'required'")
         self.required = required
 
-        self.ofType = ofType
+        self.ofType = of_type
 
-        if type(valueSet) == set or type(valueSet) == list or type(valueSet) == range:
-            self.valueSet = set(valueSet)
-        elif valueSet == None:
-            self.valueSet = valueSet
+        if type(value_set) == set or type(value_set) == list or type(value_set) == range:
+            self.valueSet = set(value_set)
+        elif value_set is None:
+            self.valueSet = value_set
         else:
-            raise TypeError("Invalid type for 'valueSet'")
+            raise TypeError("Invalid type for 'value_set'")
 
-        if not callable(custom) and custom != None:
-            raise TypeError("Invald type for 'func'")
+        if not callable(custom) and custom is not None:
+            raise TypeError("Invalid type for 'func'")
         self.custom = custom
 
-    def ParseValue(self, value):
+    def parse_value(self, value):
+        """
+        Ensures that the value provided is valid
+
+        Args:
+            value (any): The value to check against
+
+        Returns:
+            bool: Whether the value is valid
+
+        """
         # --Required check
-        if self.required and value == None:
-            raise Exception(
-                "[Property: {}] This property is required".format(self.name))
-        # --Type check, ensures that the value is of a type in ofType
-        if self.ofType != None:
+        if self.required and value is None:
+            raise PropertyRequired(self.name)
+        # --Type check, ensures that the value is of a type in of_type
+        if self.ofType is not None:
             if type(self.ofType) == list:
                 if type(value) not in self.ofType:
-                    raise Exception(
-                        "[Property: {}] Value given is not of a valid type".format(self.name))
+                    raise InvalidPropertyType(self.name, value, self.ofType)
             else:
-                if value != None and type(value) != self.ofType:
-                    raise Exception(
-                        "[Property: {}] Value given is not of a valid type".format(self.name))
+                if value is not None and type(value) != self.ofType:
+                    raise InvalidPropertyType(self.name, value, self.ofType)
         # --Value check, checks that the value is in the set given
-        if self.valueSet != None and value not in self.valueSet:
-            raise ValueError(
-                "[Property: {}] Value given is not a valid value".format(self.name))
+        if self.valueSet is not None and value not in self.valueSet:
+            raise InvalidPropertyValue(self.name, value, self.valueSet)
         # --Runs the custom function to check the value
-        if self.custom != None and not self.custom(value):
-            raise Exception(
-                "[Property: {}] Value given does not pass custom check".format(self.name))
+        if self.custom is not None and not self.custom(value):
+            raise PropertyValidatorError(self.name, value)
         return True
 
 
 class ResultProperty(PropertyBase):
-    # Defines what the property is
-    # Arguments:    -The property name, defaults to variable name   -String
-    def __init__(self, name=None, default=None):
-        self.name = name
+    def __init__(self, name=None, default=None, of_type=None, value_set=None, custom=None):
+        """
+        Defines the result property with the parameters that the property should take
+
+        Args:
+            name (str): The internal name of the property
+            default (any): A default value
+            of_type (type, [type]): A type or a set of types that the property can be
+            value_set (set, list, range): A set of values that the property can be
+            custom (lambda): A lambda function to check the value against
+        """
+        super().__init__(name)
+
         self.default = default
+
+        self.ofType = of_type
+
+        if type(value_set) == set or type(value_set) == list or type(value_set) == range:
+            self.valueSet = set(value_set)
+        elif value_set is None:
+            self.valueSet = value_set
+        else:
+            raise TypeError("Invalid type for 'value_set'")
+
+        if not callable(custom) and custom is not None:
+            raise TypeError("Invalid type for 'func'")
+        self.custom = custom
+
+    def parse_value(self, value):
+        # --Type check, ensures that the value is of a type in of_type
+        if self.ofType is not None:
+            if type(self.ofType) == list:
+                if type(value) not in self.ofType:
+                    raise InvalidPropertyType(self.name, value, self.ofType)
+            else:
+                if value is not None and type(value) != self.ofType:
+                    raise InvalidPropertyType(self.name, value, self.ofType)
+        # --Value check, checks that the value is in the set given
+        if self.valueSet is not None and value not in self.valueSet:
+            raise InvalidPropertyValue(self.name, value, self.valueSet)
+        # --Runs the custom function to check the value
+        if self.custom is not None and not self.custom(value):
+            raise PropertyValidatorError(self.name, value)
+        return True

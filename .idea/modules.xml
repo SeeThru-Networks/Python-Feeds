@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Python-Feeds.iml" filepath="$PROJECT_DIR$/.idea/Python-Feeds.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/STFeeds.iml" filepath="$PROJECT_DIR$/.idea/STFeeds.iml" />
     </modules>
   </component>
 </project>

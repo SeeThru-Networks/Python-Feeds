@@ -4,9 +4,9 @@ from pysnmp.hlapi import *
 
 
 class SNMPWalkToOID(ComponentBase):
-    SNMP_HOST = FillableProperty(name="snmp_host", required=True, ofType=str)
+    SNMP_HOST = FillableProperty(name="snmp_host", required=True, of_type=str)
     SNMP_PORT = FillableProperty(
-        name="snmp_port", default=161, required=True, ofType=int)
+        name="snmp_port", default=161, required=True, of_type=int)
     COMMUNITY = FillableProperty(name="community", required=True)
 
     VALUE = ResultProperty(name="oid_value")
@@ -16,15 +16,15 @@ class SNMPWalkToOID(ComponentBase):
     Component_Author = "SeeThru Networks"
     Component_Owner = "SeeThru Networks"
 
-    def Component_Execute(self):
+    def component_execute(self):
         value = ""
 
         # For every entry in the SNMP table.
         for errorIndication, errorStatus, errorIndex, varBinds in bulkCmd(
                 SnmpEngine(),
-                CommunityData(self.GetProperty(self.COMMUNITY)),
+                CommunityData(self.get_property(self.COMMUNITY)),
                 UdpTransportTarget(
-                    (self.GetProperty(self.SNMP_HOST), self.GetProperty(self.SNMP_PORT))),
+                    (self.get_property(self.SNMP_HOST), self.get_property(self.SNMP_PORT))),
                 ContextData(),
                 0, 50,
                 ObjectType(ObjectIdentity(oid)),
@@ -51,4 +51,4 @@ class SNMPWalkToOID(ComponentBase):
             # Then move onto the next OID entry in the SNMP feed.
 
         # Once we call break, the last value will be outputted
-        self.SetProperty(self.VALUE, value)
+        self.set_property(self.VALUE, value)

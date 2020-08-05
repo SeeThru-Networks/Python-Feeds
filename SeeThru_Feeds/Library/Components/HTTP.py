@@ -6,7 +6,7 @@ import requests
 class HTTPBase(ComponentBase):
     URL = FillableProperty(name="url", required=True)
     COOKIES = FillableProperty(name="cookies", required=False)
-    HEADERS = FillableProperty(name="header", required=False, default=None, ofType=dict)
+    HEADERS = FillableProperty(name="header", required=False, default=None, of_type=dict)
     RESPONSE = ResultProperty(name="response")
     STATUS_CODE = ResultProperty(name="status_code")
     RESPONSE_CONTENT = ResultProperty(name="response_content")
@@ -19,35 +19,35 @@ class HTTPBase(ComponentBase):
 
 
 class HTTPGet(HTTPBase):
-    def Component_Execute(self):
-        response = requests.get(self.GetProperty(
-            HTTPBase.URL), cookies=self.GetProperty(HTTPBase.COOKIES), headers=self.GetProperty(HTTPBase.HEADERS))
+    def component_execute(self):
+        response = requests.get(self.get_property(
+            HTTPBase.URL), cookies=self.get_property(HTTPBase.COOKIES), headers=self.get_property(HTTPBase.HEADERS))
 
-        self.SetProperty(HTTPGet.RESPONSE, response)
-        self.SetProperty(HTTPGet.STATUS_CODE, response.status_code)
-        self.SetProperty(HTTPGet.COOKIES, response.cookies)
-        self.SetProperty(HTTPGet.RESPONSE_CONTENT, response.text)
-        self.SetProperty(HTTPGet.RESPONSE_URL, response.url)
+        self.set_property(HTTPGet.RESPONSE, response)
+        self.set_property(HTTPGet.STATUS_CODE, response.status_code)
+        self.set_property(HTTPGet.COOKIES, response.cookies)
+        self.set_property(HTTPGet.RESPONSE_CONTENT, response.text)
+        self.set_property(HTTPGet.RESPONSE_URL, response.url)
 
 
 class HTTPPost(HTTPBase):
     DATA = FillableProperty(name="data")
-    JSON = FillableProperty(name="json", ofType=dict, required=False)
+    JSON = FillableProperty(name="json", of_type=dict, required=False)
     CONTENT_TYPE = FillableProperty(
         name="content_type", default="application/x-www-form-urlencoded")
 
-    def Component_Execute(self):
-        if self.GetProperty(HTTPBase.HEADERS) is None:
-            self.SetProperty(HTTPBase.HEADERS, {'Content-Type': self.GetProperty(self.CONTENT_TYPE)})
+    def component_execute(self):
+        if self.get_property(HTTPBase.HEADERS) is None:
+            self.set_property(HTTPBase.HEADERS, {'Content-Type': self.get_property(self.CONTENT_TYPE)})
 
         response = requests.post(
-            self.GetProperty(HTTPPost.URL),
-            cookies=self.GetProperty(HTTPPost.COOKIES),
-            data=self.GetProperty(HTTPPost.DATA),
-            json=self.GetProperty(HTTPPost.JSON),
-            headers=self.GetProperty(HTTPBase.HEADERS)
+            self.get_property(HTTPPost.URL),
+            cookies=self.get_property(HTTPPost.COOKIES),
+            data=self.get_property(HTTPPost.DATA),
+            json=self.get_property(HTTPPost.JSON),
+            headers=self.get_property(HTTPBase.HEADERS)
         )
-        self.SetProperty(HTTPPost.RESPONSE, response)
-        self.SetProperty(HTTPPost.STATUS_CODE, response.status_code)
-        self.SetProperty(HTTPPost.RESPONSE_CONTENT, response.text)
-        self.SetProperty(HTTPPost.RESPONSE_URL, response.url)
+        self.set_property(HTTPPost.RESPONSE, response)
+        self.set_property(HTTPPost.STATUS_CODE, response.status_code)
+        self.set_property(HTTPPost.RESPONSE_CONTENT, response.text)
+        self.set_property(HTTPPost.RESPONSE_URL, response.url)
