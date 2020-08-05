@@ -3,3 +3,6 @@
 *.swp
 .vscode
 .pytest_cache
+SeeThru_Feeds.egg-info/*
+build/*
+dist/*
