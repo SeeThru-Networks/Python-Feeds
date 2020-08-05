@@ -1,5 +1,6 @@
 from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
 from SeeThru_Feeds.Model.Properties.PropertyManager import PropertyManager
+from SeeThru_Feeds.Model.Feeds.Feed import Feed
 from pathlib import Path
 
 
@@ -15,6 +16,7 @@ class ScriptBase(PropertyManager):
         self.Script_Alias = None
         self.ScriptResult = None
         self.ScriptOutputPath = None
+        self.Guid = None
 
         self.prepare(*args, **kwargs)
 
@@ -141,6 +143,37 @@ class ScriptBase(PropertyManager):
         if self.ScriptResult is None:
             self.evaluate_script()
         return self.ScriptResult
+
+    def set_feed_guid(self, guid):
+        """
+        Sets the feed guid for the script
+
+        Args:
+            guid (str): The feed guid
+
+        Returns:
+            ScriptBase: The script
+        """
+        self.Guid = guid
+
+        return self
+
+    def push_as_feed(self, access_token, secret):
+        """
+        Uses the script result as a feed and pushes the result
+
+        Args:
+            access_token (str): The access token of the api key
+            secret (str): The secret of the api key
+        """
+        if self.Guid is None:
+            raise Exception("No guid has been provided")
+
+        feed = Feed()
+        feed.set_script_result(self.get_result())
+        feed.set_guid(self.Guid)
+        feed.set_api_key(access_token, secret)
+        return feed.push()
 
     # The Script_Title attribute should be set in your script
     Script_Title = None
