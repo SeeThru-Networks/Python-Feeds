@@ -1,6 +1,5 @@
 import json
 
-from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
 from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
 
 import requests
@@ -16,13 +15,13 @@ class Feed:
         self.AccessToken = access_token
         self.Secret = secret
 
-    def set_script(self, script: ScriptBase):
+    def set_script(self, script):
         self.ScriptResult = script.get_result()
 
-    def set_guid(self, guid: str):
+    def set_guid(self, guid):
         self.Guid = guid
 
-    def set_script_result(self, result: ScriptResult):
+    def set_script_result(self, result):
         self.ScriptResult = result
 
     def push(self):
