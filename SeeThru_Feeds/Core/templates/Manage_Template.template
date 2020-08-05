@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from SeeThru_Feeds.Core.SeeThru_Feed import SeeThru_Feed
+from SeeThru_Feeds.Core.SeeThruFeed import SeeThruFeed
 import sys, os
 
 if __name__=="__main__":
-    SeeThru_Feed(sys.argv, os.path.dirname(__file__))
+    SeeThruFeed(sys.argv, os.path.dirname(__file__))

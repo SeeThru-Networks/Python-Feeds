@@ -8,7 +8,7 @@ class {{ Script_Name }}(ScriptBase):
     Script_Title="{{ Script_Name }}"
 
     # ------ Script Overrides ------
-    def Script_Run(self): pass
-    def Script_Evaluate(self, result):
-        result.SetStatus("green")
-        result.SetMessage("")
+    def script_run(self): pass
+    def script_evaluate(self, result):
+        result.set_status("green")
+        result.set_message("")
