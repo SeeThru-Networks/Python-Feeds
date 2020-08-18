@@ -139,14 +139,14 @@ The template script file looks as follows:
 			Script_Title="Script_Name"
 
 			# ------ Script Overrides ------
-			def Script_Run(self): pass
-			def Script_Evaluate(self, result):
-				result.SetStatus("green")
-				result.SetMessage("")
+			def script_run(self): pass
+			def script_evaluate(self, result):
+				result.set_status("green")
+				result.set_message("")
 
 The Script_Name occurences will be replaced with the name that you gave.
 
-``Script_Run`` is where your actual script should run it's tests, e.g. performing a ping and getting the latency.
+``script_run`` is where your actual script should run it's tests, e.g. performing a ping and getting the latency.
 
 Any properties that are needed by the Script should be declared in the class using the ``FillableProperty`` and ``ResultProperty`` objects, these will be defined later but as a wuick summary, they can ensure that conditions enfored on the values needed before execution.
 An example of a FillableProperty would be the ``host`` used in a test, this would have the paremeters ``required=True`` and ``oftype=str`` to say that the property is required and must be of type string.
@@ -154,8 +154,8 @@ An example of a FillableProperty would be the ``host`` used in a test, this woul
 Any properties that are the result of your tests should be stored in ResultProperties, this is so that users of your script know what your script produces and to provice a common interface for accessing properties of a script.
 An example of a ResultProperty would be a ``latency`` property, which stores the latency of a ping test.
 
-``Script_Evaluate`` is where your script's test results should get evaluated into red, amber or green and a message produced. The method takes a result paramater which will be of type ScriptResult. This object stores the colour and message of the script.
-These can be set by using ``result.SetMessage()`` and ``Result.SetStatus()``.
+``script_evaluate`` is where your script's test results should get evaluated into red, amber or green and a message produced. The method takes a result paramater which will be of type ScriptResult. This object stores the colour and message of the script.
+These can be set by using ``result.set_message()`` and ``Result.set_status()``.
 
 To run your feed scheme, in the base directory you need to run:
 
