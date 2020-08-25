@@ -1,11 +1,13 @@
+from SeeThru_Feeds.Model.Attribution import Attribution
 from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
 from SeeThru_Feeds.Model.Properties.PropertyManager import PropertyManager
 from SeeThru_Feeds.Model.Feeds.Feed import Feed
 from pathlib import Path
 
+import SeeThru_Feeds.Model.Scripts.ScriptState as ScriptState
 
-class ScriptBase(PropertyManager):
 
+class ScriptBase(PropertyManager, Attribution):
     def __init__(self, *args, **kwargs):
         """
         Initialises the script
@@ -13,10 +15,10 @@ class ScriptBase(PropertyManager):
         ! otherwise override prepare and that'll be called after the super class is initialised
         """
         super().__init__()
-        self.Script_Alias = None
-        self.ScriptResult = None
-        self.ScriptOutputPath = None
-        self.Guid = None
+        self._script_alias = None
+        self._script_result = None
+        self._script_output_path = None
+        self._guid = None
 
         self.prepare(*args, **kwargs)
 
@@ -25,6 +27,8 @@ class ScriptBase(PropertyManager):
         This can be overridden if there *needs* to be special preparation steps
         """
         pass
+
+    # region Run
 
     def script_run(self):
         """
@@ -43,10 +47,17 @@ class ScriptBase(PropertyManager):
         Returns:
             ScriptBase: The script
         """
-        # All fillables are checked on the setter, this performs one final check
-        self.check_fillables()
-        self.script_run()
+        try:
+            # All fillables are checked on the setter, this performs one final check
+            self.check_fillables()
+            self.script_run()
+        except ScriptState.StateAssertException as _:
+            pass
         return self
+
+    # endregion
+
+    # region Evaluation
 
     def script_evaluate(self, result):
         """
@@ -69,13 +80,31 @@ class ScriptBase(PropertyManager):
             ScriptBase: The script
         """
         # Creates a new script result
-        self.ScriptResult = ScriptResult()
-        self.ScriptResult.set_status("green")
-        self.ScriptResult.set_message("")
-        self.script_evaluate(self.ScriptResult)
+        self._script_result = ScriptResult()
+        self._script_result.set_status("green")
+        self._script_result.set_message("")
+
+        # If the state engine is being used
+        if issubclass(self.__class__, ScriptState.StateEngine):
+            try:
+                # The script evaluate only load sets the state with the state engine
+                self.script_evaluate(self._script_result)
+            except NotImplementedError as _:
+                pass
+            finally:
+                self: ScriptState.StateEngine
+                state = self.get_state()
+                self._script_result.set_status(state.status)
+                self._script_result.set_message(state.message)
+        else:
+            self.script_evaluate(self._script_result)
         # Fills the Timestamp of the script result
-        self.ScriptResult.generate_timestamp()
+        self._script_result.generate_timestamp()
         return self
+
+    # endregion
+
+    # region Output
 
     def set_output_path(self, path):
         """
@@ -92,7 +121,7 @@ class ScriptBase(PropertyManager):
         """
         if type(path) != str:
             raise TypeError("The 'path' argument must be a str")
-        self.ScriptOutputPath = path
+        self._script_output_path = path
         return self
 
     def export_to_output(self):
@@ -105,20 +134,21 @@ class ScriptBase(PropertyManager):
         Returns:
             ScriptBase: The script
         """
-        if self.ScriptOutputPath is None:
+        if self._script_output_path is None:
             raise Exception("There is no output path specified")
 
-        if self.ScriptResult is None:
+        if self._script_result is None:
             self.evaluate_script()
 
-        filePath = Path(self.ScriptOutputPath)
-        if filePath.parent.exists():
-            file = open(self.ScriptOutputPath, "w")
-            file.write(self.ScriptResult.generate_json())
-            file.close()
-        else:
-            raise Exception("Directory for output file '{}' does not exist".format(self.ScriptOutputPath))
+        filePath = Path(self._script_output_path)
+        filePath.parent.mkdir(parents=True, exist_ok=True)
+        with open(filePath, "w") as file:
+            file.write(self._script_result.generate_json())
         return self
+
+    # endregion
+
+    # region Result
 
     def log_output(self):
         """
@@ -128,9 +158,9 @@ class ScriptBase(PropertyManager):
             ScriptBase: The script
         """
         if self.get_internal_alias() is not None:
-            print("--{}".format(self.get_internal_alias()))
-        print(f"Status: {self.ScriptResult.Status}")
-        print(f"Message: {self.ScriptResult.Message}")
+            print(f"--{self.get_internal_alias()}")
+        print(f"Status: {self._script_result.Status}")
+        print(f"Message: {self._script_result.Message}")
         return self
 
     def get_result(self):
@@ -140,9 +170,13 @@ class ScriptBase(PropertyManager):
         Returns:
             ScriptResult: The script result of the script
         """
-        if self.ScriptResult is None:
+        if self._script_result is None:
             self.evaluate_script()
-        return self.ScriptResult
+        return self._script_result
+
+    # endregion
+
+    # region Feeds
 
     def set_feed_guid(self, guid):
         """
@@ -154,7 +188,7 @@ class ScriptBase(PropertyManager):
         Returns:
             ScriptBase: The script
         """
-        self.Guid = guid
+        self._guid = guid
 
         return self
 
@@ -166,154 +200,36 @@ class ScriptBase(PropertyManager):
             access_token (str): The access token of the api key
             secret (str): The secret of the api key
         """
-        if self.Guid is None:
-            raise Exception("No guid has been provided")
+        if self._guid is None:
+            raise ValueError("No guid has been provided")
 
         feed = Feed()
         feed.set_script_result(self.get_result())
-        feed.set_guid(self.Guid)
+        feed.set_guid(self._guid)
         feed.set_api_key(access_token, secret)
         return feed.push()
 
-    # The Script_Title attribute should be set in your script
-    Script_Title = None
-
-    @classmethod
-    def get_title(cls):
-        """
-        Returns a title of the script
-
-        Raises:
-            NotImplementedError: There is no title defined, please define it as 'Script_Title='
-
-        Returns:
-            str: The script's title
-        """
-        if cls.Script_Title is None:
-            raise NotImplementedError("There is no title defined, please define it as 'Script_Title='")
-        return cls.Script_Title
-    # The Script_Description attribute should be set in your script
-    Script_Description = None
-
-    @classmethod
-    def get_description(cls):
-        """
-        Returns a description of the script
-
-        Raises:
-            NotImplementedError: There is no description defined, please define it as 'Script_Description='
-
-        Returns:
-            str: The script's description
-        """
-        if cls.Script_Description is None:
-            raise NotImplementedError("There is no description defined, please define it as 'Script_Description='")
-        return cls.Script_Description
-    # The Script_Author attribute should be set in your script
-    Script_Author = None
-
-    @classmethod
-    def get_author(cls):
-        """
-        Returns the author of the script
-
-        Raises:
-            NotImplementedError: There is no author defined, please define it as 'Script_Author='
-
-        Returns:
-            str: The script's author
-        """
-        if cls.Script_Author is None:
-            raise NotImplementedError("There is no author defined, please define it as 'Script_Author='")
-        return cls.Script_Author
-    # The Script_Owner attribute should be set in your script
-    Script_Owner = None
-
-    @classmethod
-    def get_owner(cls):
-        """
-        Returns a owner of the script
-
-        Raises:
-            NotImplementedError: There is no owner defined, please define it as 'Script_Owner='
-
-        Returns:
-            str: The script's owner
-        """
-        if cls.Script_Owner is None:
-            raise NotImplementedError("There is no owner defined, please define it as 'Script_Owner='")
-        return cls.Script_Owner
-    # The Script_SupportLink attribute should be set in your script
-    Script_SupportLink = None
-
-    @classmethod
-    def get_support_link(cls):
-        """
-        Returns a support link of the script
-
-        Raises:
-            NotImplementedError: There is no supportLink defined, please define it as 'Script_SupportLink='
-
-        Returns:
-            str: The script's support link
-        """
-        if cls.Script_SupportLink is None:
-            raise NotImplementedError("There is no supportLink defined, please define it as 'Script_SupportLink='")
-        return cls.Script_SupportLink
-    # The Script_DocLink attribute should be set in your script
-    Script_DocLink = None
-
-    @classmethod
-    def get_docs_link(cls):
-        """
-        Returns a doc link of the script
-
-        Raises:
-            NotImplementedError: There is no DocLink defined, please define it as 'Script_DocLink='
-
-        Returns:
-            str: The script's doc link
-        """
-        if cls.Script_DocLink is None:
-            raise NotImplementedError("There is no DocLink defined, please define it as 'Script_DocLink='")
-        return cls.Script_DocLink
-    # The Script_LicenseLink attribute should be set in your script
-    Script_LicenseLink = None
-
-    @classmethod
-    def get_license_link(cls):
-        """
-        Returns a license link of the script
-
-        Raises:
-            NotImplementedError: There is no LicenseLink defined, please define it as 'Script_LicenseLink='
-
-        Returns:
-            str: The script's license link
-        """
-        if cls.Script_LicenseLink is None:
-            raise NotImplementedError("There is no LicenseLink defined, please define it as 'Script_LicenseLink='")
-        return cls.Script_LicenseLink
+    # endregion
 
     def get_internal_alias(self):
         """
-        Returns an internal alias of the script, if it is set, it will can be used internally
+        Returns an internal alias, if it is set, it can be used internally
 
         Returns:
-            str: The script's internal alias
+            str: The internal alias
         """
-        return self.Script_Alias
+        return self._script_alias
 
     def set_internal_alias(self, alias):
         """
-        Sets a new internal alias for the script
+        Sets a new internal alias
 
         Arguments:
             alias (str): The new internal alias
 
         Returns:
-            ScriptBase: The script
+            ScriptBase: The class
         """
-        self.Script_Alias = alias
+        self._script_alias = alias
 
         return self

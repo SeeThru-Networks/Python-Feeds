@@ -1,48 +1,36 @@
+from SeeThru_Feeds.Model.Scripts.ScriptState import DefaultStates, State, StateEngine
 from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
-from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptResult
 from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
 from SeeThru_Feeds.Library.Components.Socket import UDPPortOpen as PortOpen
-import socket
 import os
 
 
-class UDPPortOpen(ScriptBase):
-    HOST = FillableProperty(name="host", required=True, of_type=str)
-    PORT = FillableProperty(name="port", required=False,
-                            of_type=[str, int], default=443)
+class UDPPortOpen(ScriptBase, StateEngine):
+    class MessageStates(DefaultStates):
+        port_closed = State("port_closed", State.error, "Cannot create a tcp socket to given host and port")
 
-    IS_PORT_OPEN = ResultProperty(name="is_port_open")
+    host = FillableProperty(name="host", required=True, of_type=str)
+    port = FillableProperty(name="port", required=False, of_type=[str, int], default=443)
+
+    is_port_open = ResultProperty(name="is_port_open")
     # Stores the error Message given by UDPPortOpen component
     ERROR_MSG = ResultProperty(name="error_msg", default=None)
 
-    Script_Title = "UDP Port Open"
-    Script_Description = "A script which tests sending data with a udp socket to a given host and port"
-    Script_Author = "SeeThru Networks"
-    Script_Owner = "SeeThru Networks"
+    Attr_Title = "UDP Port Open"
+    Attr_Description = "A script which tests sending data with a udp socket to a given host and port"
+    Attr_Author = "SeeThru Networks"
+    Attr_Owner = "SeeThru Networks"
 
     # ------ Script Overrides ------
     def script_run(self):
-        host = self.get_property(self.HOST)
-        port = self.get_property(self.PORT)
-        udp_test = PortOpen().set_property(PortOpen.TARGET_HOST,
-                                           host).set_property(PortOpen.PORT, port).run()
-        self.set_property(self.IS_PORT_OPEN,
-                          udp_test.get_property(PortOpen.SUCCEEDED))
+        udp_test = PortOpen()\
+            .set_property(PortOpen.TARGET_HOST, self.host.value)\
+            .set_property(PortOpen.PORT, self.port.value)\
+            .run()
+        self.is_port_open.value = udp_test.SUCCEEDED.value
+        self.assert_true(self.is_port_open.value, self.MessageStates.port_closed)
+
         # Sets the error Message if any
         error_no = udp_test.get_property(PortOpen.ERROR_NO)
         if error_no:
             self.set_property(self.ERROR_MSG, os.strerror(error_no))
-
-    def script_evaluate(self, result):
-        result.set_status("green")
-        result.set_message("")
-
-        # Changes to red if the port is closed
-        if not self.get_property(self.IS_PORT_OPEN):
-            result.set_status("red")
-            result.set_message(
-                "Could not create a tcp socket to given host and port")
-        # IF there is an error Message given by the os, then that is used
-        if self.get_property(self.ERROR_MSG) != None:
-            result.set_status("red")
-            result.set_message(self.get_property(self.ERROR_MSG))
