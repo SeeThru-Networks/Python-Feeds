@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from pathlib import Path
+
 from SeeThru_Feeds.Model.Feeds import Feed
 from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
 from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
@@ -12,6 +14,8 @@ from datetime import datetime
 
 import toml
 from dotenv import load_dotenv
+
+from SeeThru_Feeds.Model.Scripts.ScriptState import StateEngine
 
 
 class ProgramArgument:
@@ -75,8 +79,10 @@ class SeeThruFeed:
                 "procedure": SeeThruFeed.create_feedscheme,
                 "arguments": [
                     ProgramArgument("name", action="store", type=str, help="The name of the scheme"),
+                    ProgramArgument("path", action="store", type=str,
+                                    help="The directory to store the feedscheme, defaults to ./name"),
                     ProgramArgument("--no-config", action="store_const", const=True, required=False,
-                                    help="Create a scheme without a config file")
+                                    help="Create a scheme without a config file"),
                 ],
                 "help": "Create a feed scheme with the given name, this will create the feedscheme in a new directory"
             },
@@ -95,6 +101,20 @@ class SeeThruFeed:
                     ProgramArgument("name", action="store", type=str, help="The name of the script")
                 ],
                 "help": "Add a pre-existing script into the config file"
+            },
+            "addscriptstate": {
+                "procedure": SeeThruFeed.add_scriptstate,
+                "arguments": [
+                    ProgramArgument("script", action="store", type=str,
+                                    help="The name of the script to add the state to"),
+                    ProgramArgument("--name", action="store", type=str, required=True,
+                                    help="The name of the state"),
+                    ProgramArgument("--status", action="store", type=str, required=True,
+                                    help="The status to give the state"),
+                    ProgramArgument("--message", action="store", type=str, required=True, default="",
+                                    help="The message to give the state")
+                ],
+                "help": "Add a state to a script"
             },
             "createfeed": {
                 "procedure": SeeThruFeed.create_feed,
@@ -188,7 +208,7 @@ class SeeThruFeed:
         for program in SeeThruFeed.Programs.keys():
             print(f"\t{program} - {SeeThruFeed.Programs[program]['help']}")
 
-    def create_feedscheme(self, name, no_config=False):
+    def create_feedscheme(self, name, path=None, no_config=False):
         """
         Creates a new feed scheme of the given name in the
         current working directory
@@ -197,24 +217,33 @@ class SeeThruFeed:
             name (str): The name of the feed scheme
             no_config (bool): Whether a config file should be generated for the feedscheme
         """
+        # Gets the absolute the path
+        if path is None:
+            path = name
+        path = Path(path)
+        if not path.is_absolute():
+            path = Path(SeeThruFeed.Base_Dir).joinpath(path)
+
         # Creates the directory structure
-        create_dir(name)
-        touch_file(os.path.join(name, '__init__.py'))
-        create_dir(os.path.join(name, 'Scripts'))
-        touch_file(os.path.join(os.path.join(name, 'Scripts'), '__init__.py'))
-        create_dir(os.path.join(name, 'Scripts/Vendor'))
-        touch_file(os.path.join(os.path.join(name, 'Scripts/Vendor'), '__init__.py'))
-        create_dir(os.path.join(name, 'Components'))
-        touch_file(os.path.join(os.path.join(name, 'Components'), '__init__.py'))
-        create_dir(os.path.join(name, 'Components/Vendor'))
-        touch_file(os.path.join(os.path.join(name, 'Components/Vendor'), '__init__.py'))
-        create_dir(os.path.join(name, 'Outputs'))
+        path.mkdir(parents=True, exist_ok=True)
+
+        path.joinpath("__init__.py").touch()
+        path.joinpath("Scripts").mkdir()
+        path.joinpath("Scripts/__init__.py").touch()
+        path.joinpath("Scripts/Vendor").mkdir()
+        path.joinpath("Scripts/Vendor/__init__.py").touch()
+        path.joinpath("Components").mkdir()
+        path.joinpath("Components/__init__.py").touch()
+        path.joinpath("Components/Vendor").mkdir()
+        path.joinpath("Components/Vendor/__init__.py").touch()
+        path.joinpath("Outputs").mkdir()
 
         # Creates the new script
-        scriptFile = open(os.path.join(os.path.dirname(__file__), 'templates/Manage_Template.template'), 'r')
+        templatePath = Path(__file__).parent.joinpath("templates/Manage_Template.template")
+        scriptFile = open(templatePath, 'r')
         scriptTemplate = scriptFile.read()
         # Opens the new script file
-        newScript = open(os.path.join(name, 'manage.py'), "w")
+        newScript = open(path.joinpath("manage.py"), "w")
         newScript.write(scriptTemplate)
         # Closes the files
         newScript.close()
@@ -235,7 +264,7 @@ class SeeThruFeed:
             "Scripts": {}
         }
         # Opens a new config file for the feed scheme
-        schemeConfig = open(os.path.join(name, 'config.toml'), 'w')
+        schemeConfig = open(path.joinpath('config.toml'), 'w')
         # Writes the config
         schemeConfig.write(toml.dumps(config))
         # Closes the config file
@@ -313,6 +342,37 @@ class SeeThruFeed:
         # Closes the config file
         schemeConfig.close()
 
+    def add_scriptstate(self, script, name, status, message):
+        # Loads the config file
+        configFilePath = os.path.join(SeeThruFeed.Base_Dir, 'config.toml')
+        if not os.path.exists(configFilePath):
+            return
+        with open(configFilePath, "r+") as schemeConfig:
+            scheme = toml.loads(schemeConfig.read())
+
+            if "Scripts" not in scheme:
+                # TODO: Show error message
+                return
+
+            scripts = scheme["Scripts"]
+            if script not in scripts:
+                # TODO: Show error message
+                return
+            script = scripts[script]
+            if "States" not in script:
+                script["States"] = {}
+
+            states = script["States"]
+            # Adds the state to the script
+            states[name] = {
+                "Status": status,
+                "Message": message
+            }
+
+            schemeConfig.seek(0)
+            schemeConfig.write(toml.dumps(scheme))
+            schemeConfig.truncate()
+
     def run_feedscheme(self):
         """
         Runs the feed scheme
@@ -372,6 +432,20 @@ class SeeThruFeed:
 
                     # Assigns the fillable to the script
                     scriptInstance.set_property(fillable, value)
+            # Gets any state defined
+            if "States" in script:
+                states = script["States"]
+                for state in states.keys():
+                    value = states[state]
+                    status = value["Status"]
+                    message = value["Message"]
+                    if isinstance(scriptInstance, StateEngine):
+                        # Configures the state to the script
+                        scriptInstance: StateEngine
+                        try:
+                            scriptInstance.configure_state(state, status, message)
+                        except ValueError as _:
+                            print("Please provide a valid status of either 'red', 'amber' or 'green'. This state will not be used")
 
             scriptInstance.set_internal_alias(scriptName)
             # Runs the script
