@@ -54,7 +54,7 @@ class PropertyManager:
             TypeError: Modifier argument must be a function pointer
 
         Returns:
-            PropertyBase: The property manager
+            PropertyManager: The property manager
         """
         self.initialise()
         # Data validation
