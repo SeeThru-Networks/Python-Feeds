@@ -4,6 +4,7 @@ from pathlib import Path
 from SeeThru_Feeds.Model.Feeds import Feed
 from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
 from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
+import SeeThru_Feeds.Core.ConfigParser as ConfigParser
 
 import argparse
 import importlib
@@ -179,12 +180,12 @@ class SeeThruFeed:
         if argv[1] in SeeThruFeed.Programs.keys():
             # Gets the program
             programName = argv[1]
-            program = SeeThruFeed.Programs[argv[1]]
+            program = SeeThruFeed.Programs[programName]
             argv = argv[2:]
 
             if "alias" in program:
-                program = SeeThruFeed.Programs[program["alias"]]
                 programName = program["alias"]
+                program = SeeThruFeed.Programs[programName]
 
             # Creates the argparse program
             parser = argparse.ArgumentParser(prog=programName)
@@ -194,6 +195,7 @@ class SeeThruFeed:
             # Parses the arguments
             args = parser.parse_args(argv)
 
+            # Runs the program
             program["procedure"](self, **vars(args))
             return
         else:
@@ -253,22 +255,8 @@ class SeeThruFeed:
             return
 
         # Creates a config
-        config = {
-            "Header": {
-                "Scheme_Name": name,
-                "Scheme_Description": "Enter a description for your feed scheme",
-                "Scheme_Author": "Enter the author of your feed scheme",
-                "Scheme_Owner": "Enter the owner for your feed scheme",
-                "Creation_Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            },
-            "Scripts": {}
-        }
-        # Opens a new config file for the feed scheme
-        schemeConfig = open(path.joinpath('config.toml'), 'w')
-        # Writes the config
-        schemeConfig.write(toml.dumps(config))
-        # Closes the config file
-        schemeConfig.close()
+        config = ConfigParser.Config.new(name)
+        ConfigParser.ConfigParser.toml(path.joinpath('config.toml')).set_config(config).save()
 
     def create_script(self, name, no_config=False):
         """
@@ -294,162 +282,78 @@ class SeeThruFeed:
             return
 
         # Loads the config file
-        configFilePath = os.path.join(SeeThruFeed.Base_Dir, 'config.toml')
-        if not os.path.exists(configFilePath):
-            return
-        schemeConfig = open(configFilePath, 'r+')
-        scheme = toml.loads(schemeConfig.read())
+        with ConfigParser.ConfigParser.toml(Path(SeeThruFeed.Base_Dir).joinpath("config.toml")) as config:
+            # Creates a new script
+            config.add_script(name)
 
-        if "Scripts" not in scheme:
-            scheme["Scripts"] = {}
-
-        scheme["Scripts"][name] = {
-            "Meta": {
-                "Script_Name": f"{name}",
-                "Script_Output_Path": f"Outputs/{name}",
-                "Script_Object_Path": f"Scripts.{name}@{name}"
-            },
-        }
-
-        schemeConfig.seek(0)
-        schemeConfig.write(toml.dumps(scheme))
-        schemeConfig.truncate()
-        # Closes the config file
-        schemeConfig.close()
 
     def add_script(self, name):
-        # Loads the config file
-        configFilePath = os.path.join(SeeThruFeed.Base_Dir, 'config.toml')
-        if not os.path.exists(configFilePath):
-            return
-        schemeConfig = open(configFilePath, 'r+')
-        scheme = toml.loads(schemeConfig.read())
+        with ConfigParser.ConfigParser.toml(Path(SeeThruFeed.Base_Dir).joinpath("config.toml")) as config:
+            config.add_script(name)
 
-        if "Scripts" not in scheme:
-            scheme["Scripts"] = {}
-
-        scheme["Scripts"][name] = {
-            "Meta": {
-                "Script_Name": f"{name}",
-                "Script_Output_Path": f"Outputs/{name}",
-                "Script_Object_Path": f"Scripts.{name}@{name}"
-            },
-        }
-
-        schemeConfig.seek(0)
-        schemeConfig.write(toml.dumps(scheme))
-        schemeConfig.truncate()
-        # Closes the config file
-        schemeConfig.close()
 
     def add_scriptstate(self, script, name, status, message):
         # Loads the config file
-        configFilePath = os.path.join(SeeThruFeed.Base_Dir, 'config.toml')
-        if not os.path.exists(configFilePath):
-            return
-        with open(configFilePath, "r+") as schemeConfig:
-            scheme = toml.loads(schemeConfig.read())
-
-            if "Scripts" not in scheme:
+        with ConfigParser.ConfigParser.toml(Path(SeeThruFeed.Base_Dir).joinpath("config.toml")) as config:
+            if script not in config.Scripts:
                 # TODO: Show error message
                 return
-
-            scripts = scheme["Scripts"]
-            if script not in scripts:
-                # TODO: Show error message
-                return
-            script = scripts[script]
-            if "States" not in script:
-                script["States"] = {}
-
-            states = script["States"]
-            # Adds the state to the script
-            states[name] = {
-                "Status": status,
-                "Message": message
-            }
-
-            schemeConfig.seek(0)
-            schemeConfig.write(toml.dumps(scheme))
-            schemeConfig.truncate()
+            config.Scripts[script].add_state(name, status, message)
 
     def run_feedscheme(self):
         """
         Runs the feed scheme
         """
         # Opens the config file and parses it
-        configFilePath = os.path.join(SeeThruFeed.Base_Dir, 'config.toml')
-        if not os.path.exists(configFilePath):
-            return
-        schemeConfig = open(configFilePath, 'r')
-        scheme = toml.loads(schemeConfig.read())
-        schemeConfig.close()
+        config = ConfigParser.ConfigParser.toml(Path(SeeThruFeed.Base_Dir).joinpath("config.toml")).load()
 
-        if type(scheme["Scripts"]) != dict:
+        if len(config.Scripts) == 0:
+            # TODO: Show error message
             return
 
         scriptResults = {}
 
-        for scriptId in scheme['Scripts'].keys():
-            script = scheme["Scripts"][scriptId]
-
-            # Gets the meta
-            if "Meta" not in script:
-                return
-            meta = script["Meta"]
-
-            scriptName = get_config_attribute(meta["Script_Name"]) if "Script_Name" in meta else scriptId
-
-            if "Script_Output_Path" not in meta:
-                return
-            outputPath = get_config_attribute(meta["Script_Output_Path"])
+        for key, script in config.Scripts.items():
+            scriptName = get_config_attribute(script.Meta.Script_Name)
 
             # Splits the object's module and the object's name from the Script_Object_Path
-            if "Script_Object_Path" not in meta:
-                return
-            objectComponents = get_config_attribute(meta['Script_Object_Path']).split('@')
+            objectComponents = get_config_attribute(script.Meta.Script_Object_Path).split('@')
             if len(objectComponents) != 2:
+                # TODO: Show error message
                 return
             objectModule, objectName = tuple(objectComponents)
 
             # Dynamically imports the script
             scriptModule = importlib.import_module(objectModule)
             if objectName not in dir(scriptModule):
+                # TODO: Show error message
                 return
             scriptClass = getattr(scriptModule, objectName)
             # Instantiates the script
             scriptInstance: ScriptBase = scriptClass()
 
             # Sets any fillables defined
-            if "Fillables" in script:
-                fillables = script["Fillables"]
-                for fillable in fillables.keys():
-                    # Gets the value assigned to the fillable
-                    value = fillables[fillable]
+            for key, fillable in script.Fillables.items():
+                # Gets all defined environment variables
+                value = get_config_attribute(fillable)  # TODO: Perform conversion on different value types
 
-                    # Gets all defined environment variables
-                    value = get_config_attribute(value)
+                # Assigns the fillable to the script
+                scriptInstance.set_property(key, fillable)
 
-                    # Assigns the fillable to the script
-                    scriptInstance.set_property(fillable, value)
             # Gets any state defined
-            if "States" in script:
-                states = script["States"]
-                for state in states.keys():
-                    value = states[state]
-                    status = value["Status"]
-                    message = value["Message"]
-                    if isinstance(scriptInstance, StateEngine):
-                        # Configures the state to the script
-                        scriptInstance: StateEngine
-                        try:
-                            scriptInstance.configure_state(state, status, message)
-                        except ValueError as _:
-                            print("Please provide a valid status of either 'red', 'amber' or 'green'. This state will not be used")
+            for key, value in script.States.items():
+                if isinstance(scriptInstance, StateEngine):
+                    # Configures the state to the script
+                    scriptInstance: StateEngine
+                    try:
+                        scriptInstance.configure_state(key, value.Status, value.Message)
+                    except ValueError as _:
+                        print(
+                            "Please provide a valid status of either 'red', 'amber' or 'green'. This state will not be used")
 
             scriptInstance.set_internal_alias(scriptName)
             # Runs the script
-            scriptInstance.set_output_path(outputPath)
+            scriptInstance.set_output_path(script.Meta.Script_Output_Path)
             scriptInstance.run_script()
             scriptInstance.evaluate_script()
             scriptInstance.log_output()
@@ -458,27 +362,24 @@ class SeeThruFeed:
             scriptResults[scriptName] = scriptInstance.get_result()
 
         # Goes through every feed
-        if "Feeds" not in scheme:
+        if len(config.Feeds) == 0:
             return
-        if "Api_Keys" not in scheme:
+        if len(config.Api_Keys):
             return
-        for feed in scheme["Feeds"].keys():
-            scriptName = get_config_attribute(scheme["Feeds"][feed]["Script"])
-            api_key = get_config_attribute(scheme["Feeds"][feed]["Api_Key"])
-            guid = get_config_attribute(scheme["Feeds"][feed]["Guid"])
-            if scriptName not in scriptResults:
+        for key, feed in config.Feeds.items():
+            if feed.Script not in scriptResults:
                 continue
             # Gets the api key
-            if api_key not in scheme["Api_Keys"]:
+            if feed.Api_Key not in config.Api_Keys:
                 continue
-            accessToken = get_config_attribute(scheme["Api_Keys"][api_key]["Access_Token"])
-            secret = get_config_attribute(scheme["Api_Keys"][api_key]["Secret"])
+            accessToken = get_config_attribute(config.Api_Keys[feed.Api_Key].Access_Token)
+            secret = get_config_attribute(config.Api_Keys[feed.Api_Key].Secret)
 
-            result = scriptResults[scriptName]
+            result = scriptResults[feed.Script]
 
             # Pushes the script result
             feed = Feed.Feed()
-            feed.set_guid(guid)
+            feed.set_guid(feed.Guid)
             feed.set_api_key(accessToken, secret)
             feed.set_script_result(result)
             result = feed.push()
@@ -495,26 +396,9 @@ class SeeThruFeed:
             guid: The guid of the feed
         """
         # Loads the config file
-        configFilePath = os.path.join(SeeThruFeed.Base_Dir, 'config.toml')
-        if not os.path.exists(configFilePath):
-            return
-        schemeConfig = open(configFilePath, 'r+')
-        scheme = toml.loads(schemeConfig.read())
-
-        if "Feeds" not in scheme:
-            scheme["Feeds"] = {}
-
-        # Adds the feed to the config
-        scheme["Feeds"][name] = {
-            "Script": script,
-            "Api_Key": api_key,
-            "Guid": guid
-        }
-
-        schemeConfig.seek(0)
-        schemeConfig.write(toml.dumps(scheme))
-        schemeConfig.truncate()
-        schemeConfig.close()
+        with ConfigParser.ConfigParser.toml(Path(SeeThruFeed.Base_Dir).joinpath("config.toml")) as config:
+            # Adds the feed to the config
+            config.add_feed(name, script, api_key, guid)
 
     def add_apikey(self, reference, no_env, access_token, secret):
         """
@@ -533,21 +417,13 @@ class SeeThruFeed:
                 secret = input("Please enter the secret: ")
 
         # Loads the config file
-        configFilePath = os.path.join(SeeThruFeed.Base_Dir, 'config.toml')
-        if not os.path.exists(configFilePath):
-            return
-        schemeConfig = open(configFilePath, 'r+')
-        scheme = toml.loads(schemeConfig.read())
-
-        # Adds an api key
-        if "Api_Keys" not in scheme:
-            scheme["Api_Keys"] = {}
-
-        # Adds the reference to the env file in the config
-        scheme["Api_Keys"][reference] = {
-            "Access_Token": f"$({reference.upper()}_ACCESS_TOKEN)",
-            "Secret": f"$({reference.upper()}_SECRET)"
-        }
+        with ConfigParser.ConfigParser.toml(Path(SeeThruFeed.Base_Dir).joinpath("config.toml")) as config:
+            # Adds the reference to the env file in the config
+            config.add_api_key(
+                reference,
+                f"$({reference.upper()}_ACCESS_TOKEN)",
+                f"$({reference.upper()}_SECRET)"
+            )
 
         # Adds the access token and secret to the env file
         if no_env is None:
@@ -555,10 +431,6 @@ class SeeThruFeed:
             envFile.write(f"{reference.upper()}_ACCESS_TOKEN={access_token}\n")
             envFile.write(f"{reference.upper()}_SECRET={secret}\n")
 
-        schemeConfig.seek(0)
-        schemeConfig.write(toml.dumps(scheme))
-        schemeConfig.truncate()
-        schemeConfig.close()
 
 
 def exec():
