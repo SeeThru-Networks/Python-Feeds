@@ -119,6 +119,5 @@ if __name__ == "__main__":
     # output = config.dump()
     # print(output)
 
-    with ConfigParser.toml(Path(
-            "./config.toml")) as config:
+    with ConfigParser.toml(Path("./config.toml")) as config:
         breakpoint()
