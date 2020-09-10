@@ -50,3 +50,17 @@ class TestCoreConfigParser(TestCase):
         self.assertTrue(output["Feeds"]["GoogleFeed"]['Script'] == "Google")
         self.assertTrue(output["Feeds"]["GoogleFeed"]['Api_Key'] == "Default")
         self.assertTrue(output["Feeds"]["GoogleFeed"]['Guid'] == "abcdefgh-ijkl-mnop-qrst-uvwxyz123456")
+
+    def test_add_scriptstate(self):
+        config = ConfigParser.Config.new("Generic")
+        google = config.add_script("Google")
+        google.add_state("OK", "green", "Test message")
+
+        self.assertTrue(config.Scripts["Google"].States["OK"].Name == "OK")
+        self.assertTrue(config.Scripts["Google"].States["OK"].Status == "green")
+        self.assertTrue(config.Scripts["Google"].States["OK"].Message == "Test message")
+
+        output = config.dump()
+        self.assertTrue(output["Scripts"]["Google"]["States"]["OK"]["Name"] == "OK")
+        self.assertTrue(output["Scripts"]["Google"]["States"]["OK"]["Status"] == "green")
+        self.assertTrue(output["Scripts"]["Google"]["States"]["OK"]["Message"] == "Test message")
