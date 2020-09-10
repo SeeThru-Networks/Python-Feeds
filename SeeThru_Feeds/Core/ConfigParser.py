@@ -120,5 +120,5 @@ if __name__ == "__main__":
     # print(output)
 
     with ConfigParser.toml(Path(
-            "/Volumes/Extreme_SSD/Work/SeeThruNetworks/CurlyLarryMo/Feeds/Framework/Environment/config.toml")) as config:
+            "./config.toml")) as config:
         breakpoint()
