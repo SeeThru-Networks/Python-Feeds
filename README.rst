@@ -2,14 +2,14 @@
 SeeThru Feeds
 **************
 
-A Python library for creating tests for services that either you have or others have created.
+The SeeThru Networks python feed framework is a framework for creating feeds of services that either you or others have created.
 
-The tests that you create should have an output of either red, amber or green with a message. This is to enable an end user to easily understand the status of a service that they use without needing to understand the complexities of a test result.
+Fundamentally feeds resolve to red, amber or green and a message, these feeds act as external feeds to the SeeThru platform.
 
 Requirements
 ============
 
-* Python: 3.x
+* Python: 3.5+
 
 Installation
 ============
@@ -20,35 +20,23 @@ To install the latest development version, run:
 
   git clone https://github.com/SeeThru-Networks/Python-Feeds.git
   cd Python-Feeds
-  python setup.py install (or python3 setup.py install)
+  pip3 install .
+  pip3 install -r ./requirements.txt
 
-This will install the SeeThru Feeds module. You can also install the module in a ``virtualenv`` if you would like to do so.
-
-Alternative Installation (WIP)
-==============================
-
-If you have docker on your system, use the included docker config (Dockerfile and docker-compose.yml) like this:
-
-`docker-compose up -d`
-
-That will download the necessary images and bring the container up. Once it is up, the following command
-gives you a bash shell which uses that python. At a later time, we might add tests to run through this
-container in CI/CD created environments.
-
-`docker-compose exec python_feeds /bin/bash`
-
-Why use docker-compose? It gives us a friendly service name (python_feeds) and at a later time, when we set up a
-network of services to do automated testing, it will be useful.
+This will install the SeeThru Feeds module as well as it's dependencies.
 
 Getting Started
 ===============
 
-It is easy to get started with a testing scheme using the SeeThru Feeds module:
+It is easy to get started with a feed scheme using the SeeThru Feeds module:
 
-* ``cd`` into the directory you would like your testing scheme
-* In the terminal run ``SeeThru_Feeds createfeedscheme <Scheme_Name>``
+::
 
-This will create a new subdirectory with the name given which contains a skeleton structure of a new test scheme.
+    seethrufeeds createfeedscheme <Scheme_Name> --path <Directory>
+
+This command creates a new feed scheme with the scheme name in the given path
+
+    If the path is left blank, the feed scheme is created in a subdirectory with the name ``Scheme_Name``
 
 The directory layout is a follows:
 
@@ -65,103 +53,231 @@ The directory layout is a follows:
 	│   │   ├── [Vendor_Scripts.py]
 	├── Outputs
 	│   ├── [Test_Outputs.json]
-	├── config.toml
+	├── config.json
 	└── manage.py
 
-The vendor directories are locations for you to store components and/or scripts that weren't created by you and haven't been installed from PyPI, it provides seperation.
+The vendor directories are locations for you to store components and/or scripts that weren't created by you
+and haven't been installed from PyPI, it provides separation between the scripts that you and others have created.
 
 ``manage.py`` is a python file which acts as an interface between the module and the feed scheme directory. 
 Interaction with the feed scheme can be performed via manage.py.
 
-``config.toml`` is a toml configuration file that you can use to tell the module how to interact with the feedscheme, the main purpose being to run the scheme.
+``config.json`` is a configuration file that you can use to tell the module how to interact with the feedscheme,
+the main purpose being to run the scheme.
 
-By default the ``config.toml`` is laid out as such:
+By default the ``config.json`` is laid out as such:
 
 :: 
 
-	Scheme_Name = "Scheme_Name"
-	Scheme_Description = "Enter a description for your feed scheme"
-	Scheme_Author = "Enter the author of your feed scheme"
-	Scheme_Owner = "Enter the owner for your feed scheme"
-	Creation_Date = "The current date"
+    {
+        "Header": {
+            "Scheme_Name": "Scheme_Name",
+            "Scheme_Description": "Enter a description for your feed scheme",
+            "Scheme_Author": "Enter the author of your feed scheme",
+            "Scheme_Owner": "Enter the owner for your feed scheme",
+            "Creation_Date": "YYYY-mm-dd HH:MM:SS"
+        }
+    }
 
-``Scheme_Name`` will have the scheme name that you defined when you created the feed scheme. The other values you can fill out to give metadata to the scheme's config file.
+``Scheme_Name`` will have the scheme name that you defined when you created the feed scheme.
+The other values you can fill out to give metadata to the feedscheme.
 
-The ``config.toml`` file will get filled out as you execute more functions from ``manage.py`` but this is the default config file contents.
+The ``config.json`` file will get filled out as you execute more functions from ``manage.py``, this is the default layout.
 
 The feed scheme in its current state is fairly useless as it doesn't contain any scripts to execute.
 
-If you were to add a script that you found online and trust, you should add it to ``scripts/vendor/``.
-However this script wouldn't be executed automatically when the feedscheme is ran as the script doesn't exist in ``config.toml``.
-To make the script execute when the feedscheme is ran, you will want to add this block to the end on your config file:
+    A script is a test that gets ran which evaluates to a colour code with a message.
+    Each script is independent of each other.
+
+    Think of a script as the test definition.
+
+Scripts can be provided by others or created yourself
+
+    **Only** use scripts provided by others if you trust the source, a malicious script can be dangerous
+
+Once you have a script, you can add it to your config file
+
+    Each script entry in the config file is an *instance* of that script, the same script can be used multiple times,
+    each with a different name and properties
+
+Say, for example, you were provided a script. You should add that script to ``Scripts/Vendor/``.
+However, at this moment, the script would never run as it hasn't been added to the feedscheme config.
+
+To add a script to the config file, you can run:
 
 ::
 
-	[[Scripts]]
-		[Scripts.Script_Name]
-			[Scripts.Script_Name.Meta]
-				Script_Object_Path="Scripts.Script_File@Script_Object_Name"
-				Script_Output_Path="Outputs/Script_Name.json"
-			[Scripts.Script_Name.Fillables]
-				fillable_0 = "Value_0"
-				fillable_1 = {type="env", name="ENV_Variable_Name"}
+    python3 manage.py addscript <Script_Name> --script <Script_Object_Path>
 
-The ``Script_Name`` can be anything you want, however this will be used internally to reference the script. 
-This means that you could have multiple of the same script in the config file with different names but pass different fillables, to make the single script perform a slightly different test.
-For example, you could create a generic script which tests if a socket is open and it requires a host as a ``fillable``, then in the config file, this script can be referenced multiple times to create multiple test feeds.
+* Script_Name:
+    This is the name that you would like to give the instance of the script.
+* Script_Object_Path:
+    The script to import, relative to the base directory of the feedscheme.
 
-The ``Meta`` section defines the meta information about the feed, this includes:
+    e.g. A script in the vendor folder would be represented as ``Scripts.Vendor@MyScript``.
 
-* Script_Object_Path: 
-	This is the import path of the script object, i.e. the python line ``from Scripts.Script_File import Script_Object_Name`` translates to ``Scripts.Script_File@Script_Object_Name``. 
+    This is essentially a python import formatted as ``from@import``
+    i.e. ``from SeeThru_Feeds.Library.Scripts.TCPPortOpen import PortOpen`` => ``SeeThru_Feeds.Library.Scripts.TCPPortOpen@PortOpen``
 
-	The Script_Object_Name is the script that will actually get executed and must inherit from ``SeeThru_Feeds.Model.Scripts.Script_Base``.
-* Script_Output_Path: This is the location that the output of the script will be stored, in general this should be under ``outputs/`` and should have a file extension of ``.json``.
+The script entered into the config looks like this:
 
-The ``Fillables`` section defines the values for the properties that the script will take, the value must follow the restrictions of the fillable property in the script.
-e.g. If I had a fillable called ``host`` then in the ``Fillables`` section I would define: ``host= "seethrunetworks.co.uk"``. 
-By default the variable that I assign the value to will be the name of the fillable property in the script however this can be changed by the script's author.
+::
 
-A lot of people will want to create a script themselves, this can be done via ``manage.py`` using ``createscript Script_Name``.
-This will create a template script in the ``Scripts/`` directory and will create an entry in the ``config.toml`` file with accurate parameters meaning that the entry alread points to the new script.
+    "<Script_Name>": {
+        "Meta": {
+            "Script_Name": ">Script_Name>",
+            "Script_Output_Path": "<Script_Output_Path>",
+            "Script_Object_Path": "<Script_Object_Path>"
+        }
+    }
+
+The ``Meta`` section defines the meta about the script instance, this includes:
+    * Script_Name:
+        The name of the script instance
+
+    * Script_Object_Path:
+        This is the import path of the script object, i.e. the python line ``from Scripts.Script_File import Script_Object_Name`` translates to ``Scripts.Script_File@Script_Object_Name``.
+
+        The Script_Object_Name is the script that will actually get executed and must inherit from ``SeeThru_Feeds.Model.Scripts.Script_Base``.
+
+    * Script_Output_Path:
+        This is the location that the output of the script will be stored, in general this should be under ``Outputs/`` and should have a file extension of ``.json``.
+
+There are other sections of a script instance in the config file:
+    * Fillables
+    * States
+
+Fillables:
+    A fillable is a value that a script takes, the fillable is both named and typed.
+
+    All fillables for a script in the config file exist under the ``Fillables`` section, and take the format:
+    ``"<Fillable_Name>": "<Fillable_Value>"``
+
+    e.g.
+    ::
+
+        "Fillables": {
+            "host": "seethrunetworks.com"
+        }
+
+    This assigns the value ``seethrunetworks.com`` to the ``host`` fillable of the script
+
+States:
+    Some scripts may use the script state engine, this means that the script evaluates to a state
+    which then gets translated into a status and message .
+
+    A script will have default statuses and messages for the states that it uses however these can be overwritten.
+
+    To overwrite a state for a script instance in the config file, you can run:
+
+    ::
+
+        python3 manage.py addscriptstate <Script_Name> --name <State_Name> --status <Status> --message "<Message>"
+
+    Script_Name:
+        This is the name of the script to overwrite the state of.
+
+    State_Name:
+        The name of the state to overwrite.
+
+    Status
+        The status to give the state, one of ``red``, ``amber`` or ``green``.
+
+    Message
+        The message to give the state.
+
+    States have their own section for a script instance in the config file, e.g.
+
+    ::
+
+        "States": {
+            "<State_Name>": {
+                "Name": "<State_Name>",
+                "Status": "<Status>",
+                "Message": "<Message>"
+            }
+        }
+
+Overall, the scripts section of the config file may look like this:
+
+::
+
+    "Scripts": {
+        "<Script_Name>": {
+            "Meta": {
+                "Script_Name": "<Script_Name>",
+                "Script_Output_Path": "<Script_Output_Path>",
+                "Script_Object_Path": "<Script_Object_Path>"
+            },
+            "Fillables": {
+                "<Fillable_Name>": "<Fillable_Value>"
+            },
+            "States": {
+                "<State_Name>": {
+                    "Name": "<State_Name>",
+                    "Status": "<Status>",
+                    "Message": "<Message>"
+                }
+            }
+        }
+    }
+
+A new script can also be created via the cli:
+
+::
+    python3 manage.py createscript <Script_Name>
+
+This will create a new script file in the ``Scripts/`` directory of the feed scheme using the template script,
+naming it the same as ``Script_Name``. The script in the file will also have a name of ``Script_Name``.
+
+This will also create an entry for the script in the config file, effectively running ``addscript`` for the new script.
 
 The template script file looks as follows:
 
 :: 
 
-	from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
-	from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
-	from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
+    from SeeThru_Feeds.Model.Scripts.ScriptBase import ScriptBase
+    from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
+    from SeeThru_Feeds.Model.Properties.Properties import FillableProperty, ResultProperty
 
-	class Script_Name(ScriptBase):
-			EXAMPLE_PROPERTY = FillableProperty(name="example_property", required=False)
 
-			Script_Title="Script_Name"
+    class <Script_Name>(ScriptBase):
+        EXAMPLE_PROPERTY = FillableProperty(name="example_property", required=False)
 
-			# ------ Script Overrides ------
-			def script_run(self): pass
-			def script_evaluate(self, result):
-				result.set_status("green")
-				result.set_message("")
+        Attr_Title="<Script_Name>"
 
-The Script_Name occurences will be replaced with the name that you gave.
+        # ------ Script Overrides ------
+        def script_run(self): pass
+        def script_evaluate(self, result):
+            result.set_status("green")
+            result.set_message("")
+
+The ``Script_Name`` occurrences will be replaced with the name that you gave.
 
 ``script_run`` is where your actual script should run it's tests, e.g. performing a ping and getting the latency.
 
-Any properties that are needed by the Script should be declared in the class using the ``FillableProperty`` and ``ResultProperty`` objects, these will be defined later but as a wuick summary, they can ensure that conditions enfored on the values needed before execution.
-An example of a FillableProperty would be the ``host`` used in a test, this would have the paremeters ``required=True`` and ``oftype=str`` to say that the property is required and must be of type string.
+Any properties that are needed by the Script should be declared in the class using the ``FillableProperty``
+and ``ResultProperty`` objects, the properties perform validation on the values given to them
 
-Any properties that are the result of your tests should be stored in ResultProperties, this is so that users of your script know what your script produces and to provice a common interface for accessing properties of a script.
+An example of a FillableProperty would be the ``host`` used in a test, this would have the parameters
+``required=True`` and ``oftype=str`` to say that the property is required and must be of type string.
+This is validated when the properties are used throughout the test
+
+Any properties that are the result of your tests should be stored in ResultProperties,
+this is so that users of your script know what your script produces and to provide a common interface for
+accessing properties of a script.
+
 An example of a ResultProperty would be a ``latency`` property, which stores the latency of a ping test.
 
-``script_evaluate`` is where your script's test results should get evaluated into red, amber or green and a message produced. The method takes a result paramater which will be of type ScriptResult. This object stores the colour and message of the script.
+``script_evaluate`` is where your script's test results should get evaluated into red, amber or green and a message produced.
+The method takes a result parameter which will be of type ScriptResult. This object stores the colour and message of the script.
 These can be set by using ``result.set_message()`` and ``Result.set_status()``.
 
 To run your feed scheme, in the base directory you need to run:
 
 ::
 
-	python manage.py runfeedscheme (or python3 manage.py runfeedscheme)
+	python3 manage.py runfeedscheme
 
 Definitions
 ===========
