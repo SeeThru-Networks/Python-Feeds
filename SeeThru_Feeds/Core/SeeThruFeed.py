@@ -31,7 +31,7 @@ def touch_file(path: str):
     Args:
         path: The path to touch the file
     """
-    path = os.path.join(SeeThruFeed.Base_Dir, path)
+    path = os.path.join(path)
     f = open(path, "w")
     f.close()
 
@@ -42,7 +42,7 @@ def create_dir(path: os.path):
     Args:
         path: The path of the new directory
     """
-    path = os.path.join(SeeThruFeed.Base_Dir, path)
+    path = os.path.join(path)
     os.mkdir(path)
 
 
