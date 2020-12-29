@@ -3,6 +3,13 @@ from datetime import datetime
 
 class ScriptResult:
     def __init__(self, status=None, message=None):
+        """
+        Creates a new script result
+
+        Args:
+            status: The status of the result
+            message: The message of the result
+        """
         self.Status = status
         self.Message = message
         self.Timestamp = None
