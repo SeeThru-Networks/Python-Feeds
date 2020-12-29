@@ -25,8 +25,43 @@ To install the latest development version, run:
 
 This will install the SeeThru Feeds module as well as it's dependencies.
 
-Getting Started
-===============
+Usage
+=====
+
+You use a `ScriptResult` to store the result that you wish to publish to SeeThru Networks.
+
+**Type Definition:**
+::
+
+    Creates a new script result
+
+    Args:
+        status: The status of the result
+        message: The message of the result, "green", "amber" or "red"
+
+
+**Example:**
+::
+
+    from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
+    
+    result = ScriptResult("green", "message")
+
+
+Once a `ScriptResult` has been created, you can then publish this to SeeThru Networks, you do this via a `Feed`.
+
+::
+
+    from SeeThru_Feeds.Model.Feeds.Feed import Feed
+
+    f = Feed()
+    f.set_api_key("Access_Token", "Secret_Key")
+    f.set_guid("Guid")
+    f.set_script_result(result)
+    f.push()
+
+Framework
+=========
 
 It is easy to get started with a feed scheme using the SeeThru Feeds module:
 

@@ -4,6 +4,7 @@ from SeeThru_Feeds.Model.Scripts.ScriptResult import ScriptResult
 
 import requests
 
+
 class Feed:
     def __init__(self):
         self.AccessToken = None
@@ -41,7 +42,7 @@ class Feed:
 
         if response.status_code != 200:
             return False
-        responseJson = json.loads(response.content)
-        if not responseJson["success"]:
-            return responseJson["message"]
+        response_json = json.loads(response.content)
+        if not response_json["success"]:
+            return response_json["message"]
         return ""
