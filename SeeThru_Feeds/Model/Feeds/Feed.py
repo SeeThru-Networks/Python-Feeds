@@ -46,3 +46,31 @@ class Feed:
         if not response_json["success"]:
             return response_json["message"]
         return ""
+
+    @staticmethod
+    def generate(access_token: str, secret: str, name: str, description: str) -> "Feed":
+        headers = {
+            "X-Access-Token": access_token,
+            "X-Secret": secret
+        }
+        data = {
+            "name": name,
+            "description": description,
+        }
+
+        response = requests.post("https://api.seethrunetworks.com/feed/create", data=data, headers=headers)
+
+        # TODO: Throw custom exceptions for different errors
+        response_json = json.loads(response.content)
+        if response.status_code != 200:
+            raise Exception(response_json["message"])
+
+        if not response_json["success"]:
+            raise Exception(response_json["message"])
+
+        # Returns a new feed
+        guid = response_json["result"]["guid"]
+        feed = Feed()
+        feed.set_api_key(access_token=access_token, secret=secret)
+        feed.set_guid(guid)
+        return feed
