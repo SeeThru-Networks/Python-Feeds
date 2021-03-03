@@ -6,3 +6,5 @@
 SeeThru_Feeds.egg-info/*
 build/*
 dist/*
+venv/*
+.idea/*
