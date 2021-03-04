@@ -1,4 +1,5 @@
 import json
+from dataclasses import dataclass
 from json import JSONDecodeError
 from uuid import UUID
 
@@ -36,81 +37,36 @@ def match_error_api_message_to_exception(message: str):
         raise ApiInvalidFeedResult("Invalid feed version")
 
 
+@dataclass(frozen=True)
 class Feed:
-    # Containers of the true values
-    _feed_guid: UUID
-    _api_key: ApiKey
-    _result: FeedResult
-    _version: str = "1"
+    feed_guid: UUID
+    api_key: ApiKey
+    version: str = "1"
 
-    def __init__(self, feed_guid: UUID, api_key: ApiKey, result: FeedResult, version: str):
-        self.feed_guid = feed_guid
-        self.api_key = api_key
-        self.result = result
-        self.version = version
-
-    @property
-    def feed_guid(self) -> UUID:
-        return self._feed_guid
-
-    @feed_guid.setter
-    def feed_guid(self, feed_guid: UUID):
-        if type(feed_guid) != UUID:
+    def __post_init__(self):
+        if type(self.feed_guid) != UUID:
             raise InvalidFeedGuid("feed_guid must be of type UUID")
-        self._feed_guid = feed_guid
+        if type(self.api_key) != ApiKey:
+            raise InvalidApiKey("api_key must be of type ApiKey")
+        if type(self.version) != str:
+            raise TypeError("version must be of type str")
 
     def get_feed_guid(self):
         return self.feed_guid
 
-    @property
-    def api_key(self) -> ApiKey:
-        return self._api_key
-
-    @api_key.setter
-    def api_key(self, api_key: ApiKey):
-        if type(api_key) != ApiKey:
-            raise InvalidApiKey("api_key must be of type ApiKey")
-        self._api_key = api_key
-
     def get_api_key(self):
         return self.api_key
 
-    @property
-    def result(self) -> FeedResult:
-        return self._result
-
-    @result.setter
-    def result(self, result: FeedResult):
-        if type(result) != FeedResult:
-            raise TypeError("result must be a valid FeedResult")
-        self._result = result
-
-    def get_result(self):
-        return self.result
-
-    @property
-    def version(self) -> str:
-        return self._version
-
-    @version.setter
-    def version(self, version: str):
-        if type(version) != str:
-            raise TypeError("version must be a valid string")
-        self._version = version
-
-    def get_version(self):
-        return self.version
-
-    def push(self):
+    def push(self, result: FeedResult):
         headers = {
             "X-Access-Token": str(self.api_key.access_token),
             "X-secret": self.api_key.secret_key
         }
         data = {
             "guid": str(self.feed_guid),
-            "color": self.result.get_status_value(),
-            "message": self.result.message,
-            "timestamp": self.result.get_timestamp_str(),
+            "color": result.get_status_value(),
+            "message": result.message,
+            "timestamp": result.get_timestamp_str(),
             "version": self.version
         }
 
