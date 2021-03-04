@@ -39,11 +39,18 @@ def match_error_api_message_to_exception(message: str):
 
 @dataclass(frozen=True)
 class Feed:
+    """
+    Represents a feed on SeeThru, every feed requires a feed guid (provided by SeeThru), an api key and a version,
+    the version provided will be the version that feed results are pushed with
+    """
     feed_guid: UUID
     api_key: ApiKey
     version: str = "1"
 
     def __post_init__(self):
+        """
+        Validates the types of the feed fields
+        """
         if type(self.feed_guid) != UUID:
             raise InvalidFeedGuid("feed_guid must be of type UUID")
         if type(self.api_key) != ApiKey:
@@ -58,6 +65,12 @@ class Feed:
         return self.api_key
 
     def push(self, result: FeedResult):
+        """
+        Pushes the result to SeeThru under the current feed, the version of the feed is pushed with the result
+
+        Args:
+            result (FeedResult): The result to push to SeeThru
+        """
         headers = {
             "X-Access-Token": str(self.api_key.access_token),
             "X-secret": self.api_key.secret_key

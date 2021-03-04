@@ -8,10 +8,17 @@ from .exceptions import SecretKeyDoesNotExist, InvalidSecretKey, AccessTokenDoes
 
 @dataclass(frozen=True)
 class ApiKey:
+    """
+    Stores the api credentials used for the SeeThru api.
+    It is recommended to store these in environment variables as they can be easily loaded with ApiKey.from_env
+    """
     access_token: UUID
     secret_key: str
 
     def __post_init__(self):
+        """
+        Validates the types of the credentials given
+        """
         if type(self.access_token) != UUID:
             raise InvalidAccessToken("access_token must be of type UUID")
         if type(self.secret_key) != str:

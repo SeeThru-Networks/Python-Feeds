@@ -15,6 +15,10 @@ class StatusEnum(Enum):
 
 
 class FeedResult:
+    """
+    Stores a feed result that can be transferred to SeeThru via the api,
+    the timestamp provided can be any timezone but will be converted to utc upon pushing
+    """
     # Containers of the true values
     _status: StatusEnum
     _message: str
@@ -48,6 +52,12 @@ class FeedResult:
         return self.status
 
     def get_status_value(self) -> str:
+        """
+        Gets the value attached to the status enum
+
+        Returns:
+            The colour value
+        """
         return self.status.value
 
     @property
