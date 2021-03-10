@@ -1,5 +1,5 @@
 from unittest import TestCase
-import SeeThru_Feeds.Core.ConfigParser as ConfigParser
+import seethrufeeds.core.config_parser as ConfigParser
 
 
 class TestCoreConfigParser(TestCase):

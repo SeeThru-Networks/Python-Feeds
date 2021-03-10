@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from SeeThru_Feeds.feeds.feed_result import FeedResult, StatusEnum
+from seethrufeeds.feeds.feed_result import FeedResult, StatusEnum
 
 
 class FeedResultTestCase(unittest.TestCase):

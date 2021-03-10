@@ -1,8 +1,8 @@
 import unittest
 from uuid import UUID
 
-from SeeThru_Feeds.feeds.api_key import ApiKey
-from SeeThru_Feeds.feeds.exceptions import InvalidAccessToken, InvalidSecretKey
+from seethrufeeds.feeds.api_key import ApiKey
+from seethrufeeds.feeds.exceptions import InvalidAccessToken, InvalidSecretKey
 
 
 class ApiKeyTestCase(unittest.TestCase):

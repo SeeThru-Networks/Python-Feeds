@@ -1,5 +1,7 @@
 python-dotenv~=0.14.0
 toml~=0.10.1
-requests~=2.22.0
+requests~=2.25.1
 mysql-connector-python~=8.0.16
 py-zabbix
+setuptools~=54.0.0
+pydantic~=1.8.1
