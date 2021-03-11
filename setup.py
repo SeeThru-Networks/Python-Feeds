@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="seethrufeeds",
-    version="0.1.1",
+    version="0.1.2",
     author="SeeThru Networks",
     author_email="aidan@seethrunetworks.com",
     description="The SeeThruNetworks feed framework",
