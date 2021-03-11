@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="seethrufeeds",
-    version="0.0.1",
+    version="0.1.1",
     author="SeeThru Networks",
     author_email="aidan@seethrunetworks.com",
     description="The SeeThruNetworks feed framework",
@@ -21,6 +21,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only"
     ],
+    packages=find_packages(),
     install_requires=['requests', "python-dotenv", "toml", "mysql-connector-python", "py-zabbix", "pydantic"],
     python_requires=">=3.9",
     keywords=["seethru", "seethrunetworks", "feed"],
