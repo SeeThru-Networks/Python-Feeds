@@ -1,7 +1,7 @@
 class Attribution:
     # region Title
     # The Script_Title attribute should be set in your implementation
-    Attr_Title = None
+    attribute_title = None
 
     @classmethod
     def get_title(cls):
@@ -9,19 +9,19 @@ class Attribution:
         Returns a set title
 
         Raises:
-            NotImplementedError: There is no title defined, please define it as 'Attr_Title='
+            NotImplementedError: There is no title defined, please define it as 'attribute_title='
 
         Returns:
             str: The title
         """
-        if cls.Attr_Title is None:
-            raise NotImplementedError("There is no title defined, please define it as 'Attr_Title='")
-        return cls.Attr_Title
+        if cls.attribute_title is None:
+            raise NotImplementedError("There is no title defined, please define it as 'attribute_title='")
+        return cls.attribute_title
     # endregion
 
     # region Description
-    # The Attr_Description attribute should be set in your implementation
-    Attr_Description = None
+    # The attribute_description attribute should be set in your implementation
+    attribute_description = None
 
     @classmethod
     def get_description(cls):
@@ -29,19 +29,19 @@ class Attribution:
         Returns a description
 
         Raises:
-            NotImplementedError: There is no description defined, please define it as 'Attr_Description='
+            NotImplementedError: There is no description defined, please define it as 'attribute_description='
 
         Returns:
             str: The description
         """
-        if cls.Attr_Description is None:
-            raise NotImplementedError("There is no description defined, please define it as 'Attr_Description='")
-        return cls.Attr_Description
+        if cls.attribute_description is None:
+            raise NotImplementedError("There is no description defined, please define it as 'attribute_description='")
+        return cls.attribute_description
     # endregion
 
     # region Author
-    # The Attr_Author attribute should be set in your implementation
-    Attr_Author = None
+    # The attribute_author attribute should be set in your implementation
+    attribute_author = None
 
     @classmethod
     def get_author(cls):
@@ -49,19 +49,19 @@ class Attribution:
         Returns the author
 
         Raises:
-            NotImplementedError: There is no author defined, please define it as 'Attr_Author='
+            NotImplementedError: There is no author defined, please define it as 'attribute_author='
 
         Returns:
             str: The author
         """
-        if cls.Attr_Author is None:
-            raise NotImplementedError("There is no author defined, please define it as 'Attr_Author='")
-        return cls.Attr_Author
+        if cls.attribute_author is None:
+            raise NotImplementedError("There is no author defined, please define it as 'attribute_author='")
+        return cls.attribute_author
     # endregion
 
     # region Owner
-    # The Attr_Owner attribute should be set in your implementation
-    Attr_Owner = None
+    # The attribute_owner attribute should be set in your implementation
+    attribute_owner = None
 
     @classmethod
     def get_owner(cls):
@@ -69,19 +69,19 @@ class Attribution:
         Returns a owner
 
         Raises:
-            NotImplementedError: There is no owner defined, please define it as 'Attr_Owner='
+            NotImplementedError: There is no owner defined, please define it as 'attribute_owner='
 
         Returns:
             str: The owner
         """
-        if cls.Attr_Owner is None:
-            raise NotImplementedError("There is no owner defined, please define it as 'Attr_Owner='")
-        return cls.Attr_Owner
+        if cls.attribute_owner is None:
+            raise NotImplementedError("There is no owner defined, please define it as 'attribute_owner='")
+        return cls.attribute_owner
     # endregion
 
     # region Support_Link
-    # The Attr_SupportLink attribute should be set in your implementation
-    Attr_SupportLink = None
+    # The attribute_supportLink attribute should be set in your implementation
+    attribute_supportLink = None
 
     @classmethod
     def get_support_link(cls):
@@ -89,19 +89,19 @@ class Attribution:
         Returns a support link
 
         Raises:
-            NotImplementedError: There is no supportLink defined, please define it as 'Attr_SupportLink='
+            NotImplementedError: There is no supportLink defined, please define it as 'attribute_supportLink='
 
         Returns:
             str: The support link
         """
-        if cls.Attr_SupportLink is None:
-            raise NotImplementedError("There is no supportLink defined, please define it as 'Attr_SupportLink='")
-        return cls.Attr_SupportLink
+        if cls.attribute_supportLink is None:
+            raise NotImplementedError("There is no supportLink defined, please define it as 'attribute_supportLink='")
+        return cls.attribute_supportLink
     # endregion
 
     # region Docs_Link
-    # The Attr_DocLink attribute should be set in your implementation
-    Attr_DocLink = None
+    # The attribute_docs_link attribute should be set in your implementation
+    attribute_docs_link = None
 
     @classmethod
     def get_docs_link(cls):
@@ -109,19 +109,19 @@ class Attribution:
         Returns a doc link
 
         Raises:
-            NotImplementedError: There is no DocLink defined, please define it as 'Attr_DocLink='
+            NotImplementedError: There is no DocLink defined, please define it as 'attribute_docs_link='
 
         Returns:
             str: The doc link
         """
-        if cls.Attr_DocLink is None:
-            raise NotImplementedError("There is no DocLink defined, please define it as 'Attr_DocLink='")
-        return cls.Attr_DocLink
+        if cls.attribute_docs_link is None:
+            raise NotImplementedError("There is no DocLink defined, please define it as 'attribute_docs_link='")
+        return cls.attribute_docs_link
     # endregion
 
     # region LicenseLink
-    # The Attr_LicenseLink attribute should be set in your implementation
-    Attr_LicenseLink = None
+    # The attribute_license_link attribute should be set in your implementation
+    attribute_license_link = None
 
     @classmethod
     def get_license_link(cls):
@@ -129,12 +129,12 @@ class Attribution:
         Returns a license link
 
         Raises:
-            NotImplementedError: There is no LicenseLink defined, please define it as 'Attr_LicenseLink='
+            NotImplementedError: There is no LicenseLink defined, please define it as 'attribute_license_link='
 
         Returns:
             str: The license link
         """
-        if cls.Attr_LicenseLink is None:
-            raise NotImplementedError("There is no LicenseLink defined, please define it as 'Attr_LicenseLink='")
-        return cls.Attr_LicenseLink
+        if cls.attribute_license_link is None:
+            raise NotImplementedError("There is no LicenseLink defined, please define it as 'attribute_license_link='")
+        return cls.attribute_license_link
     # endregion
