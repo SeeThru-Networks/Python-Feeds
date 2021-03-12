@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 
-class StatusEnum(Enum):
+class FeedStatusEnum(Enum):
     green = "green"
     amber = "amber"
     red = "red"
@@ -20,14 +20,14 @@ class FeedResult:
     the timestamp provided can be any timezone but will be converted to utc upon pushing
     """
     # Containers of the true values
-    _status: StatusEnum
+    _status: FeedStatusEnum
     _message: str
     _timestamp: datetime
 
-    def __init__(self, status: StatusEnum, message: str, timestamp: datetime = None):
+    def __init__(self, status: FeedStatusEnum, message: str, timestamp: datetime = None):
         """
         Args:
-            status (StatusEnum): The status of the result
+            status (FeedStatusEnum): The status of the result
             message (str): The message of the result
             timestamp (datetime): The timestamp of the result, defaults to utc now
         """
@@ -39,16 +39,16 @@ class FeedResult:
             self.timestamp = timestamp
 
     @property
-    def status(self) -> StatusEnum:
+    def status(self) -> FeedStatusEnum:
         return self._status
 
     @status.setter
-    def status(self, status: StatusEnum):
-        if status not in StatusEnum:
-            raise TypeError("status must be of type StatusEnum")
+    def status(self, status: FeedStatusEnum):
+        if status not in FeedStatusEnum:
+            raise TypeError("status must be of type FeedStatusEnum")
         self._status = status
 
-    def get_status(self) -> StatusEnum:
+    def get_status(self) -> FeedStatusEnum:
         return self.status
 
     def get_status_value(self) -> str:
@@ -100,3 +100,4 @@ class FeedResult:
             str: The formatted timestamp
         """
         return self._timestamp.astimezone(tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
