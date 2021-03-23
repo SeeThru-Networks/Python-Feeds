@@ -6,12 +6,12 @@ Each state has a default status and message, these can be overwritten elsewhere 
 """
 from dataclasses import dataclass
 from enum import Enum
-from seethrufeeds.feeds.feed_result import StatusEnum
+from seethrufeeds.feeds.feed_result import FeedStatusEnum
 
 
 @dataclass(frozen=True)
 class State:
-    status: StatusEnum
+    status: FeedStatusEnum
     message: str
 
 
@@ -19,6 +19,6 @@ class StatesEnum(Enum):
     """
     Defines the possible states that a script can have
     """
-    ok = State(StatusEnum.green, "")
-    warning = State(StatusEnum.amber, "Warning message")
-    error = State(StatusEnum.red, "Error message")
+    ok = State(FeedStatusEnum.green, "")
+    warning = State(FeedStatusEnum.amber, "Warning message")
+    error = State(FeedStatusEnum.red, "Error message")
